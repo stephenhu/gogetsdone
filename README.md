@@ -1,2 +1,7 @@
 # gogetsdone
-gets done golang api
+
+getsdone restful api written in golang
+
+## dependencies
+
+

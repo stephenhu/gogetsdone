@@ -13,11 +13,13 @@ import (
 )
 
 const (
-	APPNAME					= "getsdone"
+	APP_NAME				= "getsdone"
+	GETSDONE        = APP_NAME
 	HASH_LENGTH     = 64
 	HMAC_KEY        = "spain this summer"
 	PEPPER          = "getsdone is the bomb"
 	SALT_LENGTH     = 32
+	TOKEN_LENGTH    = 32
 	VERSION					= "0.1"
 )
 
@@ -27,7 +29,7 @@ var port				= flag.String("port", "8888", "service port")
 var data *sql.DB = nil
 
 func version() string {
-  return fmt.Sprintf("%s v%s", APPNAME, VERSION)
+  return fmt.Sprintf("%s v%s", APP_NAME, VERSION)
 } // version
 
 func connectDatabase() {
@@ -50,6 +52,7 @@ func connectDatabase() {
 	}
 
 } // connectDatabase
+
 
 func initRoutes() *mux.Router {
 
@@ -74,7 +77,7 @@ func main() {
 
 	addr := fmt.Sprintf(":%s", *port)
 
-	log.Printf("%s listening on port %s", APPNAME, *port)
+	log.Printf("%s listening on port %s", APP_NAME, *port)
 
 	log.Fatal(http.ListenAndServe(addr, router))
 
