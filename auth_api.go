@@ -11,17 +11,29 @@ import (
 
 const (
 
-	SIGNUP_USER	= "INSERT into users(" +
-		"email, password" +
-		") VALUES(" + 
-		"?, ?);"
-
 	UPDATE_TOKEN = "UPDATE users(" +
 		"token) " +
 		"VALUES(?) " +
 		"WHERE id=?" 
 
 )
+
+
+func checkToken(r *http.Request) *User {
+
+	cookie, err := r.Cookie("madsportslab")
+
+	if err != nil {
+		return nil
+	} else {
+
+		u := getUserByToken(cookie.Value)
+
+		return u
+
+	}
+
+} // checkToken
 
 
 func authenticate(email string, password string) *User {

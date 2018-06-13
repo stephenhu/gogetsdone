@@ -9,6 +9,7 @@ create table if not exists ranks(
 create table if not exists users(
   id INTEGER NOT NULL PRIMARY KEY,
   email VARCHAR NOT NULL UNIQUE,
+  name VARCHAR NOT NULL UNIQUE,
   mobile VARCHAR,
   password VARCHAR NOT NULL,
   salt VARCHAR,

@@ -11,14 +11,19 @@ import (
 const (
 
 	CREATE_USER	= "INSERT into users(" +
-		"email, salt, password) " +
-		"VALUES(?, ?, ?)"
+		"email, salt, password, name) " +
+		"VALUES(?, ?, ?, ?)"
 
 	GET_USER_BY_EMAIL = "SELECT " +
-		"id, email, mobile, icon, password, salt, registered " +
+		"id, email, name, mobile, icon, password, salt, registered, token " +
 		"from users " +
 	  "WHERE email=?"
 
+	GET_USER_BY_TOKEN = "SELECT " +
+		"id, email, name, mobile, icon, password, salt, registered, token " +
+		"from users " +
+		"WHERE token=?"
+		
 	)
 
 func createUser(email string, password string) (error) {
@@ -33,17 +38,26 @@ func createUser(email string, password string) (error) {
 
 	} else {
 
-		_, err := data.Exec(
-			CREATE_USER, email, salt, hash,
-		)
+		name, err := gowdl.ParseNameFromEmail(email)
 
 		if err != nil {
-
-			log.Println(err)
+			log.Printf("%s createUser(): %s", APP_NAME, err.Error())
 			return err
-
 		} else {
-			return nil
+
+			_, err := data.Exec(
+				CREATE_USER, email, salt, hash, name,
+			)
+	
+			if err != nil {
+	
+				log.Println(err)
+				return err
+	
+			} else {
+				return nil
+			}
+	
 		}
 
 	}
@@ -59,8 +73,8 @@ func getUserByEmail(email string) *User {
 
 	u := User{}
 
-	err := row.Scan(&u.ID, &u.Email, &u.Mobile, &u.Icon, &u.Password,
-		&u.Salt, &u.Registered)
+	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Mobile, &u.Icon, &u.Password,
+		&u.Salt, &u.Registered, &u.Token)
 
 	if err == sql.ErrNoRows {
 		log.Println("gogetsdone getUserByEmail(): ", err)
@@ -70,6 +84,27 @@ func getUserByEmail(email string) *User {
 	return &u
 
 } // getUserByEmail
+
+
+func getUserByToken(token string) *User {
+
+	row := data.QueryRow(
+		GET_USER_BY_TOKEN, token,
+	)
+
+	u := User{}
+
+	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Mobile, &u.Icon, &u.Password,
+		&u.Salt, &u.Registered, &u.Token)
+
+	if err == sql.ErrNoRows {
+		log.Println("gogetsdone getUserByToken(): ", err)
+		return nil
+	}
+
+	return &u
+
+} // getUserByToken
 
 
 func userHandler(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +123,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 			if err != nil {
 				
-				log.Printf("%s userHandler(): %s", APP_NAME, err.String)
+				log.Printf("%s userHandler(): %s", APP_NAME, err.Error())
 				w.WriteHeader(http.StatusForbidden)
 
 			} else {
