@@ -12,6 +12,7 @@ create table if not exists users(
   name VARCHAR NOT NULL UNIQUE,
   mobile VARCHAR,
   password VARCHAR NOT NULL,
+  token VARCHAR,
   salt VARCHAR,
   icon VARCHAR,
   rank_id INTEGER,

@@ -17,6 +17,7 @@ const (
 	GETSDONE        = APP_NAME
 	HASH_LENGTH     = 64
 	HMAC_KEY        = "spain this summer"
+	LOCALHOST       = "127.0.0.1"
 	PEPPER          = "getsdone is the bomb"
 	SALT_LENGTH     = 32
 	TOKEN_LENGTH    = 32
@@ -25,6 +26,7 @@ const (
 
 var database		= flag.String("database", "./data/getsdone.db", "database address")
 var port				= flag.String("port", "8888", "service port")
+var domain      = flag.String("domain", LOCALHOST, "domain address")
 
 var data *sql.DB = nil
 

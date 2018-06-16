@@ -11,10 +11,9 @@ import (
 
 const (
 
-	UPDATE_TOKEN = "UPDATE users(" +
-		"token) " +
-		"VALUES(?) " +
-		"WHERE id=?" 
+	UPDATE_TOKEN = "UPDATE users" +
+		"SET token='?' " +
+		"WHERE id=?"
 
 )
 
@@ -143,7 +142,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		cookie := http.Cookie{
 			Name:   GETSDONE,
 			Value:  "",
-			Domain: "127.0.0.1",
+			Domain: *domain,
 			Path:   "/",
 			MaxAge: -1,
 		}

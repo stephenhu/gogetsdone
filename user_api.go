@@ -11,8 +11,8 @@ import (
 const (
 
 	CREATE_USER	= "INSERT into users(" +
-		"email, salt, password, name) " +
-		"VALUES(?, ?, ?, ?)"
+		"email, salt, password, name, token) " +
+		"VALUES(?, ?, ?, ?, ?)"
 
 	GET_USER_BY_EMAIL = "SELECT " +
 		"id, email, name, mobile, icon, password, salt, registered, token " +
@@ -45,17 +45,25 @@ func createUser(email string, password string) (error) {
 			return err
 		} else {
 
-			_, err := data.Exec(
-				CREATE_USER, email, salt, hash, name,
-			)
-	
+			token, err := gowdl.GenerateToken(HMAC_KEY, TOKEN_LENGTH)
+
 			if err != nil {
-	
-				log.Println(err)
 				return err
-	
 			} else {
-				return nil
+
+				_, err := data.Exec(
+					CREATE_USER, email, salt, hash, name, token,
+				)
+		
+				if err != nil {
+		
+					log.Println(err)
+					return err
+		
+				} else {
+					return nil
+				}
+
 			}
 	
 		}
@@ -128,7 +136,24 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 			} else {
 
-				
+				u := authenticate(email, password)
+
+				if u == nil {
+					w.WriteHeader(http.StatusUnauthorized)
+				} else {
+
+					log.Println(u.Token.String)
+					cookie := http.Cookie{
+						Name: GETSDONE,
+						Value: u.Token.String,
+						Domain: *domain,
+						Path: "/",
+					}
+
+					http.SetCookie(w, &cookie)
+								
+				}
+
 			}
 
 		}
