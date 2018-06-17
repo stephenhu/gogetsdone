@@ -15,6 +15,10 @@ const (
 		"SET token='?' " +
 		"WHERE id=?"
 
+	DELETE_TOKEN = "UPDATE users" +
+		"SET token='' " +
+		"WHERE id=?"
+
 )
 
 
@@ -71,6 +75,28 @@ func authenticate(email string, password string) *User {
 } // authenticate
 
 
+func deleteToken(u *User) (error) {
+
+	if u == nil {
+		return errors.New(fmt.Sprintf("%s deleteToken(): %s", APP_NAME,
+		  "cannot delete token for nil user"))
+	} else {
+
+		_, err := data.Exec(
+			DELETE_TOKEN, u.ID,
+		)
+
+		if err != nil {
+			return err
+		} else {
+			return nil
+		}
+
+	}
+
+} // deleteToken
+
+
 func updateToken(u *User) (string, error) {
 
 	if u == nil {
@@ -122,14 +148,14 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 			} else {
 
-				cookie := http.Cookie{
+				cookie := &http.Cookie{
           Name: GETSDONE,
           Value: token,
-          Domain: "127.0.0.1",
+          Domain: *domain,
           Path: "/",
         }
         
-				http.SetCookie(w, &cookie)
+				http.SetCookie(w, cookie)
 				
 			}
 
@@ -139,7 +165,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
   case http.MethodGet:
 	case http.MethodDelete:
 		
-		cookie := http.Cookie{
+		cookie := &http.Cookie{
 			Name:   GETSDONE,
 			Value:  "",
 			Domain: *domain,
@@ -147,7 +173,20 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 			MaxAge: -1,
 		}
 
-		http.SetCookie(w, &cookie)
+		http.SetCookie(w, cookie)
+
+		u := checkToken(r)
+
+		if u != nil {
+
+			err := deleteToken(u)
+
+			if err != nil {
+				log.Println(err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+
+		}
 
 	default:
 	  w.WriteHeader(http.StatusMethodNotAllowed)

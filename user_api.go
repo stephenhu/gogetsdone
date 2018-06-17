@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	//"time"
 
 	"github.com/stephenhu/gowdl"
 )
@@ -84,7 +85,7 @@ func getUserByEmail(email string) *User {
 	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Mobile, &u.Icon, &u.Password,
 		&u.Salt, &u.Registered, &u.Token)
 
-	if err == sql.ErrNoRows {
+	if err != nil || err == sql.ErrNoRows {
 		log.Println("gogetsdone getUserByEmail(): ", err)
 		return nil
 	}
@@ -105,7 +106,7 @@ func getUserByToken(token string) *User {
 	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Mobile, &u.Icon, &u.Password,
 		&u.Salt, &u.Registered, &u.Token)
 
-	if err == sql.ErrNoRows {
+	if err != nil || err == sql.ErrNoRows {
 		log.Println("gogetsdone getUserByToken(): ", err)
 		return nil
 	}
@@ -136,21 +137,27 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 			} else {
 
-				u := authenticate(email, password)
+				u := getUserByEmail(email)
 
 				if u == nil {
-					w.WriteHeader(http.StatusUnauthorized)
+					w.WriteHeader(http.StatusNotFound)
 				} else {
 
-					log.Println(u.Token.String)
-					cookie := http.Cookie{
-						Name: GETSDONE,
-						Value: u.Token.String,
-						Domain: *domain,
-						Path: "/",
+					if u.Token.Valid {
+
+						cookie := &http.Cookie{
+							Name: GETSDONE,
+							Value: u.Token.String,
+							Domain: *domain,
+							Path: "/",
+						}
+
+						http.SetCookie(w, cookie)
+
+					} else {
+
 					}
 
-					http.SetCookie(w, &cookie)
 								
 				}
 

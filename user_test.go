@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"strings"
 	"testing"
@@ -22,6 +23,10 @@ func TestCreateUser(t *testing.T) {
 	if res.StatusCode != http.StatusOK {
 		t.Errorf("Expected 200, received: %d", res.StatusCode)
 	}
+
+	cookies := res.Cookies()
+
+	log.Println(cookies)
 
 } // TestCreateUser
 

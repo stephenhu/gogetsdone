@@ -13,10 +13,10 @@ create table if not exists users(
   mobile VARCHAR,
   password VARCHAR NOT NULL,
   token VARCHAR,
-  salt VARCHAR,
+  salt VARCHAR NOT NULL,
   icon VARCHAR,
   rank_id INTEGER,
-  registered BOOLEAN,
+  registered BOOLEAN DEFAULT false,
   created DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(rank_id) REFERENCES ranks(id)
@@ -53,6 +53,7 @@ create table if not exists tasks(
   delegate_id INTEGER,
   state_id INTEGER,
   priority_id INTEGER,
+  origin_id INTEGER,
   visibility INTEGER DEFAULT 0,
   task VARCHAR NOT NULL,
   estimate DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -62,7 +63,8 @@ create table if not exists tasks(
   FOREIGN KEY(owner_id) REFERENCES users(id),
   FOREIGN KEY(delegate_id) REFERENCES delegates(id),
   FOREIGN KEY(state_id) REFERENCES states(id),
-  FOREIGN KEY(priority_id) REFERENCES priorities(id)  
+  FOREIGN KEY(priority_id) REFERENCES priorities(id),
+  FOREIGN KEY(origin_id) REFERENCES tasks(id)
 );
 
 create table if not exists hashtags(
