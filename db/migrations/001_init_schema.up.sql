@@ -56,12 +56,13 @@ create table if not exists tasks(
   origin_id INTEGER,
   visibility INTEGER DEFAULT 0,
   task VARCHAR NOT NULL,
+  meta VARCHAR,
   estimate DATETIME DEFAULT CURRENT_TIMESTAMP,
   actual DATETIME DEFAULT CURRENT_TIMESTAMP,
   created DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(owner_id) REFERENCES users(id),
-  FOREIGN KEY(delegate_id) REFERENCES delegates(id),
+  FOREIGN KEY(delegate_id) REFERENCES users(id),
   FOREIGN KEY(state_id) REFERENCES states(id),
   FOREIGN KEY(priority_id) REFERENCES priorities(id),
   FOREIGN KEY(origin_id) REFERENCES tasks(id)
@@ -69,7 +70,7 @@ create table if not exists tasks(
 
 create table if not exists hashtags(
   id INTEGER NOT NULL PRIMARY KEY,
-  hashtag VARCHAR,
+  hashtag VARCHAR NOT NULL UNIQUE,
   created DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated DATETIME DEFAULT CURRENT_TIMESTAMP 
 );

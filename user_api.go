@@ -20,12 +20,19 @@ const (
 		"from users " +
 	  "WHERE email=?"
 
+	GET_USER_BY_NAME = "SELECT " +
+		"id, email, name, icon " +
+		"from users " +
+		"WHERE name=?"
+		
 	GET_USER_BY_TOKEN = "SELECT " +
 		"id, email, name, mobile, icon, password, salt, registered, token " +
 		"from users " +
 		"WHERE token=?"
 		
-	)
+)
+
+
 
 func createUser(email string, password string) (error) {
 
@@ -72,6 +79,26 @@ func createUser(email string, password string) (error) {
 	}
 
 } // createUser
+
+
+func getUserByName(name string) *UserInfo {
+
+	row := data.QueryRow(
+		GET_USER_BY_NAME, name,
+	)
+
+	u := UserInfo{}
+
+	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Icon)
+
+	if err != nil || err == sql.ErrNoRows {
+		log.Println("gogetsdone getUserByName(): ", err)
+		return nil
+	}
+
+	return &u
+
+} // getUserByName
 
 
 func getUserByEmail(email string) *User {
@@ -155,7 +182,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 						http.SetCookie(w, cookie)
 
 					} else {
-
+						log.Println("%s userHandler(): %s", APP_NAME, "no token")
 					}
 
 								

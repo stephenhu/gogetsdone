@@ -24,7 +24,7 @@ const (
 
 func checkToken(r *http.Request) *User {
 
-	cookie, err := r.Cookie("madsportslab")
+	cookie, err := r.Cookie(GETSDONE)
 
 	if err != nil {
 		return nil

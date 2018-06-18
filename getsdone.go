@@ -27,4 +27,36 @@ type User struct {
 	Icon          sql.NullString    `json:"icon"`
 	Token         sql.NullString    `json:"token"`
 	RankID        string						`json:"rankdId"`
+	Created  			string						`json:"created"`
+	Updated			  string						`json:"updated"`
+}
+
+type UserInfo struct {
+	ID						string						`json:"id"`
+	Email					string						`json:"email"`
+	Name          string    				`json:"name"`
+	Icon          sql.NullString    `json:"icon"`
+	Created  			string						`json:"created"`
+	Updated			  string						`json:"updated"`
+}
+
+type Task struct {
+	ID						string						`json:"id"`
+	OwnerID       string            `json:"ownerId"`
+	DelegateID    string            `json:"delegateId"`
+	OriginID      string            `json:"originId"`
+	StateID       string            `json:"stateId"`
+	PriorityID    string            `json:"priorityId"`
+	Task          string            `json:"task"`
+	Visibility    bool              `json:"visibility"`
+	Estimate			string						`json:"estimate"`
+	Actual				string						`json:"actual"`
+	Created  			string						`json:"created"`
+	Updated			  string						`json:"updated"`
+}
+
+type Hashtag struct {
+	ID						string						`json:"id"`
+  Tag       		string            `json:"tag"`
+	Description   string            `json:"description"`
 }
