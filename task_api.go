@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -28,7 +30,12 @@ const (
 
 	GET_HASHTAG = "SELECT id, hashtag, description " +
 		"FROM hashtags " +
-		"WHERE hashtag='?'"
+		"WHERE hashtag=?"
+
+	GET_TASKS_BY_USER = "SELECT id, owner_id, delegate_id, origin_id, task, " +
+		"estimate, actual, created " +
+		"FROM tasks " +
+		"WHERE owner_id=? or delegate_id=?"
 		
 )
 
@@ -239,10 +246,74 @@ func createTask(id string, task string, mentions string, hashtags string,
 } // createTask
 
 
+func getTasksByUser(id string) []Task {
+
+	tasks := []Task{}
+
+	rows, err := data.Query(
+		GET_TASKS_BY_USER, id, id,
+	)
+
+	defer rows.Close()
+
+	if err != nil || err == sql.ErrNoRows {
+		
+		log.Printf("%s getTasksByUser(): %s", err.Error())
+		return tasks
+
+	} else {
+
+		for rows.Next() {
+
+			t := Task{}
+
+			err := rows.Scan(&t.ID, &t.OwnerID, &t.DelegateID, &t.OriginID,
+				&t.Task, &t.Estimate, &t.Actual, &t.Created)
+				
+			if err != nil || err == sql.ErrNoRows {
+
+				log.Printf("%s getTasksByUser(): %s", err.Error())
+				return tasks
+
+			} else {
+				tasks = append(tasks, t)
+			}
+
+		}
+
+		return tasks
+
+	}
+
+} // getTasksByUser
+
+
 func taskHandler(w http.ResponseWriter, r *http.Request) {
 
   switch r.Method {
-  case http.MethodGet:
+	case http.MethodGet:
+		
+		u := checkToken(r)
+
+		if u == nil {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+
+			tasks := getTasksByUser(u.ID)
+
+			j, err := json.Marshal(tasks)
+
+			if err != nil {
+				
+				log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
+				w.WriteHeader(http.StatusInternalServerError)
+
+			} else {
+				w.Write(j)
+			}
+
+		}
+		
 	case http.MethodPost:
 		
 		u := checkToken(r)
@@ -255,8 +326,6 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 			mentions 	:= r.FormValue("mentions")
 			hashtags  := r.FormValue("hashtags")
 			urls      := r.FormValue("urls")
-
-			log.Println(task)
 
 			if task == "" {
 				w.WriteHeader(http.StatusBadRequest)

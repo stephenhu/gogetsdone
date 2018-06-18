@@ -43,14 +43,14 @@ type UserInfo struct {
 type Task struct {
 	ID						string						`json:"id"`
 	OwnerID       string            `json:"ownerId"`
-	DelegateID    string            `json:"delegateId"`
-	OriginID      string            `json:"originId"`
-	StateID       string            `json:"stateId"`
-	PriorityID    string            `json:"priorityId"`
+	DelegateID    sql.NullString    `json:"delegateId"`
+	OriginID      sql.NullString    `json:"originId"`
+	StateID       sql.NullString    `json:"stateId"`
+	PriorityID    sql.NullString    `json:"priorityId"`
 	Task          string            `json:"task"`
 	Visibility    bool              `json:"visibility"`
-	Estimate			string						`json:"estimate"`
-	Actual				string						`json:"actual"`
+	Estimate			sql.NullString		`json:"estimate"`
+	Actual				sql.NullString		`json:"actual"`
 	Created  			string						`json:"created"`
 	Updated			  string						`json:"updated"`
 }
