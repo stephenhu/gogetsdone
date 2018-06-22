@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/mux"
+	"github.com/stephenhu/gowdl"
+
 )
 
 const (
@@ -28,23 +31,19 @@ const (
 		"task_id, hashtag_id) " +
 		"VALUES(?, ?)"
 
-	GET_HASHTAG = "SELECT id, hashtag, description " +
+	GET_HASHTAG = "SELECT id, hashtag " +
 		"FROM hashtags " +
 		"WHERE hashtag=?"
 
-	GET_TASKS_BY_USER = "SELECT id, owner_id, delegate_id, origin_id, task, " +
-		"estimate, actual, created " +
+	GET_OPEN_TASKS_BY_USER = "SELECT id, owner_id, delegate_id, origin_id, " +
+	  "task, actual, created " +
 		"FROM tasks " +
-		"WHERE owner_id=? or delegate_id=?"
-		
-)
+		"WHERE (owner_id=? or delegate_id=?) and actual IS NULL"
+	
+	COMPLETE_TASK = "UPDATE tasks " +
+		"SET actual=CURRENT_TIMESTAMP " +
+		"where id=?"
 
-
-const (
-	MENTION_SYMBOL				= "@"
-	HASHTAG_SYMBOL				= "#"
-	SPACE_SYMBOL          = " "
-	COMMA_SYMBOL          = ","
 )
 
 
@@ -53,20 +52,16 @@ func shortenURLs(s string) (string, error) {
 } // shortenURLs
 
 
-func addHashtags(id string, task string, hashtags string) {
+func addHashtags(id string, task string) {
 
-	if hashtags != "" {
+	hashtags := gowdl.ExtractHashtags(task)
 
-		h := strings.Split(hashtags, COMMA_SYMBOL)
+	for _, hashtag := range hashtags {
 
-		for _, hashtag := range h {
+		err := createHashtag(strings.TrimSpace(hashtag))
 
-			err := createHashtag(strings.TrimSpace(hashtag))
-
-			if err != nil {
-				log.Printf("%s addHashtags(): %s", APP_NAME, err.Error())
-			}
-	
+		if err != nil {
+			log.Printf("%s addHashtags(): %s", APP_NAME, err.Error())
 		}
 
 	}
@@ -74,24 +69,18 @@ func addHashtags(id string, task string, hashtags string) {
 } // addHashtags
 
 
-func addDelegates(id string, oid string, task string,
-	mentions string, hashtags string) {
+func addDelegates(id string, oid string, task string) {
 
-	if mentions != "" {
-		
-		m := strings.Split(mentions, COMMA_SYMBOL)
+	mentions := gowdl.ExtractMentions(task)
+	
+	for _, mention := range mentions {
 
-		for _, mention := range m {
+		u := getUserByName(strings.TrimSpace(mention))
 
-			log.Println(mention)
-			u := getUserByName(strings.TrimSpace(mention))
-
-			if u == nil {
-				log.Printf("%s addDelegates(): delegate user not found", APP_NAME)
-			} else {
-				cloneTask(id, u.ID, oid, task, hashtags)
-			}
-
+		if u == nil {
+			log.Printf("%s addDelegates(): delegate user not found", APP_NAME)
+		} else {
+			cloneTask(id, u.ID, oid, task)
 		}
 
 	}
@@ -99,8 +88,8 @@ func addDelegates(id string, oid string, task string,
 } // addDelegates
 
 
-func cloneTask(id string, delegate_id string, origin_id string, task string,
-	hashtags string) (error) {
+func cloneTask(id string, delegate_id string, origin_id string,
+	task string) (error) {
 
 	res, err := data.Exec(
 		CLONE_TASK, id, delegate_id, origin_id, task,
@@ -117,9 +106,9 @@ func cloneTask(id string, delegate_id string, origin_id string, task string,
 			return err
 		} else {
 
-			tags := strings.Split(hashtags, COMMA_SYMBOL)
+			hashtags := gowdl.ExtractHashtags(task)
 
-			for _, hashtag := range tags {
+			for _, hashtag := range hashtags {
 
 				h := getHashtag(strings.TrimSpace(hashtag))
 
@@ -161,7 +150,7 @@ func getHashtag(hashtag string) *Hashtag {
 
 	h := Hashtag{}
 
-	err := row.Scan(&h.ID, &h.Tag, &h.Description)
+	err := row.Scan(&h.ID, &h.Tag)
 
 	if err != nil {
 		log.Printf("%s getHashtag(): %s", APP_NAME, err.Error())
@@ -188,8 +177,7 @@ func addHashtagToTask(tid string, hid string) (error) {
 } // addHashtagToTask
 
 
-func createTask(id string, task string, mentions string, hashtags string, 
-	urls string) (error) {
+func createTask(uid string, task string) (error) {
 
 	tx, err := data.Begin()
 
@@ -198,7 +186,6 @@ func createTask(id string, task string, mentions string, hashtags string,
 		return err
 	} else {
 
-		// TODO: shorten urls, use a db table or shortener service
 		shortenedTask, err := shortenURLs(task)
 
 		if err != nil {
@@ -207,7 +194,7 @@ func createTask(id string, task string, mentions string, hashtags string,
 		} else {
 
 			res, err := data.Exec(
-				CREATE_TASK, id, shortenedTask,
+				CREATE_TASK, uid, shortenedTask,
 			)
 		
 			if err != nil {
@@ -225,10 +212,9 @@ func createTask(id string, task string, mentions string, hashtags string,
 					return err
 				} else {
 	
-					addHashtags(id, task, hashtags)
+					addHashtags(uid, task)
 	
-					addDelegates(id, fmt.Sprintf("%d", oid), shortenedTask, mentions,
-					  hashtags)
+					addDelegates(uid, fmt.Sprintf("%d", oid), shortenedTask)
 	
 					tx.Commit()
 	
@@ -246,19 +232,19 @@ func createTask(id string, task string, mentions string, hashtags string,
 } // createTask
 
 
-func getTasksByUser(id string) []Task {
+func getOpenTasksByUser(id string) []Task {
 
 	tasks := []Task{}
 
 	rows, err := data.Query(
-		GET_TASKS_BY_USER, id, id,
+		GET_OPEN_TASKS_BY_USER, id, id,
 	)
 
 	defer rows.Close()
 
 	if err != nil || err == sql.ErrNoRows {
 		
-		log.Printf("%s getTasksByUser(): %s", err.Error())
+		log.Printf("%s getOpenTasksByUser(): %s", APP_NAME, err.Error())
 		return tasks
 
 	} else {
@@ -268,11 +254,11 @@ func getTasksByUser(id string) []Task {
 			t := Task{}
 
 			err := rows.Scan(&t.ID, &t.OwnerID, &t.DelegateID, &t.OriginID,
-				&t.Task, &t.Estimate, &t.Actual, &t.Created)
+				&t.Task, &t.Actual, &t.Created)
 				
 			if err != nil || err == sql.ErrNoRows {
 
-				log.Printf("%s getTasksByUser(): %s", err.Error())
+				log.Printf("%s getOpenTasksByUser(): %s", APP_NAME, err.Error())
 				return tasks
 
 			} else {
@@ -288,6 +274,22 @@ func getTasksByUser(id string) []Task {
 } // getTasksByUser
 
 
+func completeTask(tid string) bool {
+
+	_, err := data.Exec(
+		COMPLETE_TASK, tid,
+	)
+
+	if err != nil {
+		log.Printf("%s completeTask(): %s", APP_NAME, err.Error())
+		return false
+	} else {
+		return true
+	}
+
+} // completeTask
+
+
 func taskHandler(w http.ResponseWriter, r *http.Request) {
 
   switch r.Method {
@@ -299,7 +301,7 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
 
-			tasks := getTasksByUser(u.ID)
+			tasks := getOpenTasksByUser(u.ID)
 
 			j, err := json.Marshal(tasks)
 
@@ -323,18 +325,15 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 
 			task 			:= r.FormValue("task")
-			mentions 	:= r.FormValue("mentions")
-			hashtags  := r.FormValue("hashtags")
-			urls      := r.FormValue("urls")
 
 			if task == "" {
 				w.WriteHeader(http.StatusBadRequest)
 			} else {
 
-				err := createTask(u.ID, task, mentions, hashtags, urls)
+				err := createTask(u.ID, task)
 
 				if err != nil {
-					log.Println("%s taskHandler(): %s", APP_NAME, err.Error())
+					log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
 					w.WriteHeader(http.StatusConflict)
 				}
 
@@ -342,8 +341,35 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 			
 		}
 
-  case http.MethodDelete:
 	case http.MethodPut:
+
+		vars := mux.Vars(r)
+
+		id 		:= vars["id"]
+		tid 	:= vars["tid"]
+
+		u := checkToken(r)
+
+		if u == nil {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+
+			if u.ID == id {
+				
+				if !completeTask(tid) {
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+
+			} else {
+				w.WriteHeader(http.StatusUnauthorized)
+			}
+
+
+		}
+
+
+
+  case http.MethodDelete:
 	default:
 	  w.WriteHeader(http.StatusMethodNotAllowed)
 	}

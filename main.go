@@ -52,6 +52,7 @@ func initRoutes() *mux.Router {
 
 	router.HandleFunc("/api/users", userHandler)
 	router.HandleFunc("/api/users/{id:[0-9]+}/tasks", taskHandler)
+	router.HandleFunc("/api/users/{id:[0-9]+}/tasks/{tid:[0-9]+}", taskHandler)
 	router.HandleFunc("/api/users/{id:[0-9]+}/follows", followHandler)
 
 	return router

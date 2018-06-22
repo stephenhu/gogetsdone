@@ -9,7 +9,7 @@ is to break them down into multiple tasks.
 1.  all lowercase
 1.  characters a-z, 0-9, hyphen, underscore, dot
 1.  must start with a-z
-1.  length cannot exceed 24 chars
+1.  length cannot exceed 15 chars
 
 multiple user mentions means that the task is cloned.  however, changes to any
 of the clones does not change the original task.

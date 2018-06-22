@@ -182,7 +182,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 						http.SetCookie(w, cookie)
 
 					} else {
-						log.Println("%s userHandler(): %s", APP_NAME, "no token")
+						log.Printf("%s userHandler(): %s", APP_NAME, "no token")
 					}
 
 								

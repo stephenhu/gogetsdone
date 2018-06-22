@@ -49,7 +49,6 @@ type Task struct {
 	PriorityID    sql.NullString    `json:"priorityId"`
 	Task          string            `json:"task"`
 	Visibility    bool              `json:"visibility"`
-	Estimate			sql.NullString		`json:"estimate"`
 	Actual				sql.NullString		`json:"actual"`
 	Created  			string						`json:"created"`
 	Updated			  string						`json:"updated"`
@@ -58,5 +57,4 @@ type Task struct {
 type Hashtag struct {
 	ID						string						`json:"id"`
   Tag       		string            `json:"tag"`
-	Description   string            `json:"description"`
 }
