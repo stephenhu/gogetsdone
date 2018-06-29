@@ -6,9 +6,11 @@ import (
 
 const (
 	APP_NAME				= "getsdone"
+	BLOCK_KEY				= "abcdefabcdefabcd"
 	GETSDONE        = APP_NAME
 	HASH_LENGTH     = 32
 	HMAC_KEY        = "spain this summer"
+	IV							= "this is ricky bo"
 	LOCAL_HOST      = "127.0.0.1"
 	PEPPER          = "getsdone is the bomb"
 	SALT_LENGTH     = 24
@@ -57,4 +59,10 @@ type Task struct {
 type Hashtag struct {
 	ID						string						`json:"id"`
   Tag       		string            `json:"tag"`
+}
+
+type CookieData struct {
+	ID				string				`json:"id"`
+	Token			string				`json:"token"`
+	Icon			string				`json:"icon"`
 }

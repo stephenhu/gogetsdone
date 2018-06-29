@@ -2,9 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
 	"net/http"
-	//"time"
 
 	"github.com/stephenhu/gowdl"
 )
@@ -31,7 +31,6 @@ const (
 		"WHERE token=?"
 		
 )
-
 
 
 func createUser(email string, password string) (error) {
@@ -172,14 +171,24 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 					if u.Token.Valid {
 
-						cookie := &http.Cookie{
-							Name: GETSDONE,
-							Value: u.Token.String,
-							Domain: *domain,
-							Path: "/",
-						}
+						encryptedData, err := encryptCookieData(u.ID, u.Token.String,
+							u.Icon.String)
 
-						http.SetCookie(w, cookie)
+						if err != nil {
+							log.Printf("%s userHandler(): %s", APP_NAME, err.Error())
+							w.WriteHeader(http.StatusInternalServerError)
+						} else {
+
+							cookie := &http.Cookie{
+								Name: GETSDONE,
+								Value: encryptedData,
+								Domain: *domain,
+								Path: "/",
+							}
+
+							http.SetCookie(w, cookie)
+
+						}						
 
 					} else {
 						log.Printf("%s userHandler(): %s", APP_NAME, "no token")
@@ -193,6 +202,33 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case http.MethodGet:
+
+		u := checkToken(r)
+
+		if u != nil {
+
+			info := UserInfo{
+				ID:			u.ID,
+				Name:  	u.Name,
+			}
+
+			j, err := json.Marshal(info)
+
+			if err != nil {
+				
+				log.Printf("%s userHandler(): %s", APP_NAME, err.Error())
+				w.WriteHeader(http.StatusInternalServerError)
+
+			} else {
+				w.Write(j)
+			}
+
+		} else {
+			
+			log.Printf("%s userHandler(): %s", APP_NAME, "user not authenticated")
+			w.WriteHeader(http.StatusUnauthorized)
+
+		}
   
   case http.MethodDelete:
 	case http.MethodPut:

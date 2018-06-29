@@ -1,6 +1,10 @@
 package main
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -11,15 +15,96 @@ import (
 
 const (
 
-	UPDATE_TOKEN = "UPDATE users" +
-		"SET token='?' " +
+	UPDATE_TOKEN = "UPDATE users " +
+		"SET token=? " +
 		"WHERE id=?"
 
-	DELETE_TOKEN = "UPDATE users" +
+	DELETE_TOKEN = "UPDATE users " +
 		"SET token='' " +
 		"WHERE id=?"
 
 )
+
+
+func encryptCookieData(id string, token string, icon string) (string, error) {
+
+	block, err := aes.NewCipher([]byte(BLOCK_KEY))
+
+	if err != nil {
+		return "", err
+	} else {
+
+		cfb := cipher.NewCFBEncrypter(block, []byte(IV))
+
+		c := CookieData{
+			ID: id,
+			Token: token,
+		}
+
+		j, err := json.Marshal(c)
+
+		if err != nil {
+			log.Printf("%s encryptCookieData(): %s", APP_NAME, err.Error())
+			return "", err
+		} else {
+
+			ciphertext := make([]byte, len(j))
+
+			cfb.XORKeyStream(ciphertext, j)
+
+			return hex.EncodeToString(ciphertext), nil
+
+		}
+	  
+	}
+
+} // encryptCookieData
+
+
+func decryptCookieData(ciphertext string) *CookieData {
+
+	block, err := aes.NewCipher([]byte(BLOCK_KEY))
+
+	if err != nil {
+		
+		log.Printf("%s decryptCookieData(): %s", APP_NAME, err.Error())
+		return nil
+
+	} else {
+
+		cfb := cipher.NewCFBDecrypter(block, []byte(IV))
+
+		decoded, err := hex.DecodeString(ciphertext)
+
+		if err != nil {
+			
+			log.Printf("%s decryptCookieData(): %s", APP_NAME, err.Error())
+			return nil
+
+		} else {
+
+			j := make([]byte, len(decoded))
+
+			cfb.XORKeyStream(j, decoded)
+
+			c := CookieData{}
+	
+			err := json.Unmarshal(j, &c)
+	
+			if err != nil {
+				
+				log.Printf("%s decryptCookieData(): %s", APP_NAME, err.Error())
+				return nil
+
+			} else {
+				return &c
+			}
+
+		}
+
+
+	}
+} // decryptCookieData
 
 
 func checkToken(r *http.Request) *User {
@@ -30,10 +115,19 @@ func checkToken(r *http.Request) *User {
 		return nil
 	} else {
 
-		u := getUserByToken(cookie.Value)
+		cookieData := decryptCookieData(cookie.Value)
 
-		return u
+		log.Println(cookieData)
+		if cookieData != nil {
 
+			u := getUserByToken(cookieData.Token)
+
+			return u
+
+		} else {
+			return nil
+		}
+		
 	}
 
 } // checkToken
@@ -144,18 +238,29 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 			token, err := updateToken(u)
 
 			if err != nil {
-				log.Printf("%s authHandler(): %s", APP_NAME, "unable to update token")
+				log.Printf("%s authHandler(): %s", APP_NAME, err.Error())
 				w.WriteHeader(http.StatusInternalServerError)
 			} else {
 
-				cookie := &http.Cookie{
-          Name: GETSDONE,
-          Value: token,
-          Domain: *domain,
-          Path: "/",
-        }
-        
-				http.SetCookie(w, cookie)
+				encryptedData, err := encryptCookieData(u.ID, token, u.Icon.String)
+
+				if err != nil {
+
+					log.Println(err)
+					w.WriteHeader(http.StatusInternalServerError)
+
+				} else {
+
+					cookie := &http.Cookie{
+						Name: GETSDONE,
+						Value: encryptedData,
+						Domain: *domain,
+						Path: "/",
+					}
+					
+					http.SetCookie(w, cookie)
+
+				}				
 				
 			}
 
