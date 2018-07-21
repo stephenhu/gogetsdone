@@ -18,6 +18,13 @@ const (
 	VERSION					= "0.1"
 )
 
+const (
+	TASK_OPEN				= "open"
+	TASK_COMPLETED	= "completed"
+	TASK_ASSIGNED  	= "assigned"
+	TASK_DEFERRED   = "deferred"
+)
+
 type User struct {
 	ID						string						`json:"id"`
 	Email					string						`json:"email"`
@@ -42,9 +49,20 @@ type UserInfo struct {
 	Updated			  string						`json:"updated"`
 }
 
+type Comment struct {
+	ID						string						`json:"id"`
+	UserID				string						`json:"userId"`
+	UserName      string            `json:"userName"`
+	TaskID				string						`json:"taskId"`
+	Comment       string						`json:"comment"`
+	Created  			string						`json:"created"`
+	Updated			  string						`json:"updated"`
+}
+
 type Task struct {
 	ID						string						`json:"id"`
 	OwnerID       string            `json:"ownerId"`
+	OwnerName     string            `json:"ownerName"`
 	DelegateID    sql.NullString    `json:"delegateId"`
 	OriginID      sql.NullString    `json:"originId"`
 	StateID       sql.NullString    `json:"stateId"`
@@ -52,6 +70,7 @@ type Task struct {
 	Task          string            `json:"task"`
 	Visibility    bool              `json:"visibility"`
 	Actual				sql.NullString		`json:"actual"`
+	Comments      []Comment         `json:"comments"`
 	Created  			string						`json:"created"`
 	Updated			  string						`json:"updated"`
 }

@@ -35,14 +35,38 @@ const (
 		"FROM hashtags " +
 		"WHERE hashtag=?"
 
-	GET_OPEN_TASKS_BY_USER = "SELECT id, owner_id, delegate_id, origin_id, " +
-	  "task, actual, created " +
-		"FROM tasks " +
-		"WHERE (owner_id=? or delegate_id=?) and actual IS NULL"
-	
+	GET_OPEN_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, tasks.delegate_id, " +
+		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, users.name " +
+		"FROM tasks, users " +
+		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and (tasks.owner_id=users.id) " +
+		"and tasks.actual IS NULL and tasks.deferred=0"
+
+	GET_COMPLETED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, " +
+		"tasks.delegate_id, tasks.origin_id, tasks.task, tasks.actual, " +
+		"tasks.created, users.name " +
+		"FROM tasks, users " +
+		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and (tasks.owner_id=users.id) " +
+		"and tasks.actual IS NOT NULL"
+
+	GET_DEFERRED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, " +
+		"tasks.delegate_id, tasks.origin_id, tasks.task, tasks.actual, " +
+		"tasks.created, users.name " +
+		"FROM tasks, users " +
+		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and tasks.deferred=1 " +
+		"and tasks.actual IS NULL"
+
+	GET_TASK = "SELECT tasks.id, tasks.owner_id, tasks.delegate_id, " +
+		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, users.name " +
+		"FROM tasks, users " +
+		"WHERE tasks.id=? and tasks.owner_id=users.id"
+
 	COMPLETE_TASK = "UPDATE tasks " +
 		"SET actual=CURRENT_TIMESTAMP " +
-		"where id=?"
+		"WHERE id=?"
+
+	DEFER_TASK = "UPDATE tasks " +
+		"SET deferred=1 " +
+		"WHERE id=?"
 
 )
 
@@ -193,36 +217,47 @@ func createTask(uid string, task string) (error) {
 			return err
 		} else {
 
-			res, err := data.Exec(
-				CREATE_TASK, uid, shortenedTask,
-			)
-		
-			if err != nil {
-		
-				tx.Rollback()
-				log.Println(err)
-				return err
-		
+			mentions := gowdl.ExtractMentions(task)
+
+			if len(mentions) > 0 {
+				return nil
 			} else {
-	
-				oid, err := res.LastInsertId()
-	
-				if err != nil {
-					log.Printf("%s createTask(): %s", APP_NAME, err.Error())
-					return err
-				} else {
-	
-					addHashtags(uid, task)
-	
-					addDelegates(uid, fmt.Sprintf("%d", oid), shortenedTask)
-	
-					tx.Commit()
-	
-					return nil
-	
-				}
+
+				res, err := data.Exec(
+					CREATE_TASK, uid, shortenedTask,
+				)
 			
+				if err != nil {
+			
+					tx.Rollback()
+					log.Println(err)
+					return err
+			
+				} else {
+		
+					oid, err := res.LastInsertId()
+		
+					log.Println(oid)
+
+					if err != nil {
+						log.Printf("%s createTask(): %s", APP_NAME, err.Error())
+						return err
+					} else {
+		
+						addHashtags(uid, task)
+		
+						//addDelegates(uid, fmt.Sprintf("%d", oid), shortenedTask)
+		
+						tx.Commit()
+		
+						return nil
+		
+					}
+				
+				}
+
 			}
+			
 	
 		}
 
@@ -232,13 +267,34 @@ func createTask(uid string, task string) (error) {
 } // createTask
 
 
-func getOpenTasksByUser(id string) []Task {
+func getTasksByUser(id string, view string) []Task {
+
+	var rows *sql.Rows
+	var err error
 
 	tasks := []Task{}
+	
+	log.Println(view)
 
-	rows, err := data.Query(
-		GET_OPEN_TASKS_BY_USER, id, id,
-	)
+	if view == TASK_COMPLETED {
+	
+		rows, err = data.Query(
+			GET_COMPLETED_TASKS_BY_USER, id, id,
+		)
+
+	} else if view == TASK_DEFERRED {
+		
+		rows, err = data.Query(
+			GET_DEFERRED_TASKS_BY_USER, id, id,
+		)
+
+	} else {
+		
+		rows, err = data.Query(
+			GET_OPEN_TASKS_BY_USER, id, id,
+		)
+
+	}
 
 	defer rows.Close()
 
@@ -254,7 +310,7 @@ func getOpenTasksByUser(id string) []Task {
 			t := Task{}
 
 			err := rows.Scan(&t.ID, &t.OwnerID, &t.DelegateID, &t.OriginID,
-				&t.Task, &t.Actual, &t.Created)
+				&t.Task, &t.Actual, &t.Created, &t.OwnerName)
 				
 			if err != nil || err == sql.ErrNoRows {
 
@@ -262,6 +318,13 @@ func getOpenTasksByUser(id string) []Task {
 				return tasks
 
 			} else {
+
+				comments := getCommentsByTask(t.ID)
+
+				log.Println(comments)
+
+				t.Comments = comments
+
 				tasks = append(tasks, t)
 			}
 
@@ -272,6 +335,31 @@ func getOpenTasksByUser(id string) []Task {
 	}
 
 } // getTasksByUser
+
+
+func getTask(id string) *Task {
+
+	row := data.QueryRow(
+		GET_TASK, id,
+	)
+
+	t := Task{}
+
+	err := row.Scan(&t.ID, &t.OwnerID, &t.DelegateID, &t.OriginID,
+		&t.Task, &t.Actual, &t.Created, &t.OwnerName)
+
+	if err != nil || err == sql.ErrNoRows {
+		log.Println("gogetsdone getTask(): ", err)
+		return nil
+	}
+
+	comments := getCommentsByTask(t.ID)
+
+	t.Comments = comments
+	
+	return &t
+
+} // getTask
 
 
 func completeTask(tid string) bool {
@@ -301,18 +389,51 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
 
-			tasks := getOpenTasksByUser(u.ID)
+			// TODO: authorization?
 
-			j, err := json.Marshal(tasks)
+			vars := mux.Vars(r)
 
-			if err != nil {
-				
-				log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
-				w.WriteHeader(http.StatusInternalServerError)
+			id	:= vars["id"]
+			tid	:= vars["tid"]
+
+			log.Println(id)
+			
+			if tid == "" {
+
+				view := r.FormValue("view")
+
+				var tasks []Task
+	
+				tasks = getTasksByUser(u.ID, view)	
+	
+				j, err := json.Marshal(tasks)
+	
+				if err != nil {
+					
+					log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
+					w.WriteHeader(http.StatusInternalServerError)
+	
+				} else {
+					w.Write(j)
+				}
 
 			} else {
-				w.Write(j)
+
+				task := getTask(tid)
+
+				j, err := json.Marshal(task)
+
+				if err != nil {
+
+					log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
+					w.WriteHeader(http.StatusInternalServerError)
+
+				} else {
+					w.Write(j)
+				}
+
 			}
+
 
 		}
 		

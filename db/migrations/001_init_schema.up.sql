@@ -57,6 +57,7 @@ create table if not exists tasks(
   visibility INTEGER DEFAULT 0,
   task VARCHAR NOT NULL,
   meta VARCHAR,
+  deferred BOOLEAN DEFAULT false,
   actual DATETIME,
   created DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated DATETIME DEFAULT CURRENT_TIMESTAMP,
