@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -46,13 +47,14 @@ const (
 		"tasks.created, users.name " +
 		"FROM tasks, users " +
 		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and (tasks.owner_id=users.id) " +
-		"and tasks.actual IS NOT NULL"
+		"and tasks.actual IS NOT NULL " +
+		"ORDER BY tasks.created DESC"
 
 	GET_DEFERRED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, " +
 		"tasks.delegate_id, tasks.origin_id, tasks.task, tasks.actual, " +
 		"tasks.created, users.name " +
 		"FROM tasks, users " +
-		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and tasks.deferred=1 " +
+		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and tasks.deferred=1 and (tasks.owner_id=users.id) " +
 		"and tasks.actual IS NULL"
 
 	GET_TASK = "SELECT tasks.id, tasks.owner_id, tasks.delegate_id, " +
@@ -72,7 +74,13 @@ const (
 
 
 func shortenURLs(s string) (string, error) {
-  return s, nil
+	
+	if len(s) < 1 {
+		return "", errors.New("Invalid string")
+	} else {
+		return strings.Replace(s, "\n", "", 1), nil
+	}
+
 } // shortenURLs
 
 
@@ -378,6 +386,22 @@ func completeTask(tid string) bool {
 } // completeTask
 
 
+func deferTask(tid string) bool {
+
+	_, err := data.Exec(
+		DEFER_TASK, tid,
+	)
+
+	if err != nil {
+		log.Printf("%s deferTask(): %s", APP_NAME, err.Error())
+		return false
+	} else {
+		return true
+	}
+
+} // deferTask
+
+
 func taskHandler(w http.ResponseWriter, r *http.Request) {
 
   switch r.Method {
@@ -476,9 +500,21 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 
 			if u.ID == id {
-				
-				if !completeTask(tid) {
-					w.WriteHeader(http.StatusInternalServerError)
+
+				action := r.FormValue("action")
+		
+				if action == ACTION_COMPLETED {
+
+					if !completeTask(tid) {
+						w.WriteHeader(http.StatusInternalServerError)
+					}
+	
+				} else if action == ACTION_DEFERRED {
+
+					if !deferTask(tid) {
+						w.WriteHeader(http.StatusInternalServerError)
+					}
+
 				}
 
 			} else {

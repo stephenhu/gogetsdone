@@ -26,9 +26,9 @@ const (
 		"WHERE name=?"
 		
 	GET_USER_BY_TOKEN = "SELECT " +
-		"id, email, name, mobile, icon, password, salt, registered, token " +
-		"from users " +
-		"WHERE token=?"
+		"users.id, users.email, users.name, users.mobile, users.icon, users.password, users.salt, users.registered, users.token, ranks.rank " +
+		"from users, ranks " +
+		"WHERE users.token=? and users.rank_id=ranks.id"
 		
 )
 
@@ -130,7 +130,7 @@ func getUserByToken(token string) *User {
 	u := User{}
 
 	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Mobile, &u.Icon, &u.Password,
-		&u.Salt, &u.Registered, &u.Token)
+		&u.Salt, &u.Registered, &u.Token, &u.RankName)
 
 	if err != nil || err == sql.ErrNoRows {
 		log.Println("gogetsdone getUserByToken(): ", err)
@@ -208,8 +208,9 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		if u != nil {
 
 			info := UserInfo{
-				ID:			u.ID,
-				Name:  	u.Name,
+				ID:				u.ID,
+				Name:  		u.Name,
+				RankName: u.RankName,
 			}
 
 			j, err := json.Marshal(info)

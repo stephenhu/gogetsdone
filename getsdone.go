@@ -25,6 +25,11 @@ const (
 	TASK_DEFERRED   = "deferred"
 )
 
+const (
+	ACTION_COMPLETED		= "completed"
+	ACTION_DEFERRED			= "deferred"
+)
+
 type User struct {
 	ID						string						`json:"id"`
 	Email					string						`json:"email"`
@@ -36,6 +41,7 @@ type User struct {
 	Icon          sql.NullString    `json:"icon"`
 	Token         sql.NullString    `json:"token"`
 	RankID        string						`json:"rankdId"`
+	RankName      string            `json:"rankName"`
 	Created  			string						`json:"created"`
 	Updated			  string						`json:"updated"`
 }
@@ -45,6 +51,7 @@ type UserInfo struct {
 	Email					string						`json:"email"`
 	Name          string    				`json:"name"`
 	Icon          sql.NullString    `json:"icon"`
+	RankName      string            `json:"rankName"`
 	Created  			string						`json:"created"`
 	Updated			  string						`json:"updated"`
 }
