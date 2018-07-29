@@ -117,6 +117,7 @@ func checkToken(r *http.Request) *User {
 
 		cookieData := decryptCookieData(cookie.Value)
 
+		log.Println(cookieData)
 		if cookieData != nil {
 
 			u := getUserByToken(cookieData.Token)
@@ -245,7 +246,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 				if err != nil {
 
-					log.Println(err)
+					log.Printf("%s authHandler(): %s", APP_NAME, err.Error())
 					w.WriteHeader(http.StatusInternalServerError)
 
 				} else {

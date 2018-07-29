@@ -78,7 +78,7 @@ func shortenURLs(s string) (string, error) {
 	if len(s) < 1 {
 		return "", errors.New("Invalid string")
 	} else {
-		return strings.Replace(s, "\n", "", 1), nil
+		return strings.Replace(s, "\n", " ", 1), nil
 	}
 
 } // shortenURLs
@@ -231,7 +231,7 @@ func createTask(uid string, task string) (error) {
 				return nil
 			} else {
 
-				res, err := data.Exec(
+				_, err := data.Exec(
 					CREATE_TASK, uid, shortenedTask,
 				)
 			
@@ -243,25 +243,12 @@ func createTask(uid string, task string) (error) {
 			
 				} else {
 		
-					oid, err := res.LastInsertId()
+					addHashtags(uid, task)
 		
-					log.Println(oid)
-
-					if err != nil {
-						log.Printf("%s createTask(): %s", APP_NAME, err.Error())
-						return err
-					} else {
+					tx.Commit()
 		
-						addHashtags(uid, task)
+					return nil
 		
-						//addDelegates(uid, fmt.Sprintf("%d", oid), shortenedTask)
-		
-						tx.Commit()
-		
-						return nil
-		
-					}
-				
 				}
 
 			}

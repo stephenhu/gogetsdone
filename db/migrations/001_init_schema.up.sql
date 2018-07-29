@@ -15,7 +15,7 @@ create table if not exists users(
   token VARCHAR,
   salt VARCHAR NOT NULL,
   icon VARCHAR,
-  rank_id INTEGER,
+  rank_id INTEGER DEFAULT 1,
   registered BOOLEAN DEFAULT false,
   created DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated DATETIME DEFAULT CURRENT_TIMESTAMP,

@@ -26,7 +26,9 @@ const (
 		"WHERE name=?"
 		
 	GET_USER_BY_TOKEN = "SELECT " +
-		"users.id, users.email, users.name, users.mobile, users.icon, users.password, users.salt, users.registered, users.token, ranks.rank " +
+		"users.id, users.email, users.name, users.mobile, " +
+		"users.icon, users.password, users.salt, users.registered, " + 
+		"users.token, ranks.rank " +
 		"from users, ranks " +
 		"WHERE users.token=? and users.rank_id=ranks.id"
 		
