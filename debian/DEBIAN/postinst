@@ -1,0 +1,18 @@
+# migrate sqlite3 database
+
+/home/devops/bin/migrate -database sqlite3:///home/devops/data/getsdone.db -source file:///home/devops/data/migrations up
+
+
+# enable and start service
+
+if [ -d /run/systemd/system ]; then
+  systemctl --system daemon-reload >/dev/null || true
+  if ! deb-systemd-invoke is-enabled getsdone >/dev/null
+  then
+    deb-systemd-invoke enable getsdone >/dev/null || true
+  fi
+  deb-systemd-invoke start getsdone >/dev/null || true
+fi
+
+exit 0
+

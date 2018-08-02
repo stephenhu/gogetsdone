@@ -268,8 +268,6 @@ func getTasksByUser(id string, view string) []Task {
 	var err error
 
 	tasks := []Task{}
-	
-	log.Println(view)
 
 	if view == TASK_COMPLETED {
 	
@@ -456,7 +454,7 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
 
-			task 			:= r.FormValue("task")
+			task := r.FormValue("task")
 
 			if task == "" {
 				w.WriteHeader(http.StatusBadRequest)

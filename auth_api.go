@@ -117,7 +117,6 @@ func checkToken(r *http.Request) *User {
 
 		cookieData := decryptCookieData(cookie.Value)
 
-		log.Println(cookieData)
 		if cookieData != nil {
 
 			u := getUserByToken(cookieData.Token)

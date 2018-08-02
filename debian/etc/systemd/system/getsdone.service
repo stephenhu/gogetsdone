@@ -1,0 +1,13 @@
+[Unit]
+Description=getsdone daemon
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/devops/bin
+ExecStart=/home/devops/bin/gogetsdone /home/devops/data/mboard.db
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+

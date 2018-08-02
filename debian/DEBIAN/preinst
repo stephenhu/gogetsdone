@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+# add devops user
+
+if ! getent passwd devops >/dev/null; then
+  adduser --system --home /home/devops --shell /bin/bash --group devops
+fi
+
+exit 0
+
