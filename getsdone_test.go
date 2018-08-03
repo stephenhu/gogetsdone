@@ -20,6 +20,7 @@ const (
 
 var server *httptest.Server
 var userApi string
+var versionApi string
 var db string
 
 func newDatabase(source string, driver string) {
@@ -57,7 +58,8 @@ func init() {
 
 	connectDatabase()
 
-  userApi = fmt.Sprintf("%s/api/users", server.URL)
+	userApi = fmt.Sprintf("%s/api/users", server.URL)
+	versionApi = fmt.Sprintf("%s/api/version", server.URL)
 
 } // init
 

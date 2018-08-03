@@ -5,7 +5,7 @@ After=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=/home/devops/bin
-ExecStart=/home/devops/bin/gogetsdone /home/devops/data/mboard.db
+ExecStart=/home/devops/bin/gogetsdone -database /home/devops/data/getsdone.db -domain getsdone.xyz
 Restart=always
 
 [Install]

@@ -30,6 +30,10 @@ const (
 	ACTION_DEFERRED			= "deferred"
 )
 
+type VersionInfo struct {
+	Version 			string						`json:"version"`
+}
+
 type User struct {
 	ID						string						`json:"id"`
 	Email					string						`json:"email"`
@@ -55,6 +59,7 @@ type UserInfo struct {
 	Created  			string						`json:"created"`
 	Updated			  string						`json:"updated"`
 }
+
 
 type Comment struct {
 	ID						string						`json:"id"`
