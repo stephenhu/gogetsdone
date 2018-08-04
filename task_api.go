@@ -404,8 +404,6 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 
 			id	:= vars["id"]
 			tid	:= vars["tid"]
-
-			log.Println(id)
 			
 			if tid == "" {
 

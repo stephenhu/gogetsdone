@@ -16,7 +16,7 @@ create table if not exists users(
   salt VARCHAR NOT NULL,
   icon VARCHAR,
   rank_id INTEGER DEFAULT 1,
-  registered BOOLEAN DEFAULT false,
+  registered BOOLEAN DEFAULT 0,
   created DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(rank_id) REFERENCES ranks(id)
@@ -57,7 +57,7 @@ create table if not exists tasks(
   visibility INTEGER DEFAULT 0,
   task VARCHAR NOT NULL,
   meta VARCHAR,
-  deferred BOOLEAN DEFAULT false,
+  deferred BOOLEAN DEFAULT 0,
   actual DATETIME,
   created DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated DATETIME DEFAULT CURRENT_TIMESTAMP,
