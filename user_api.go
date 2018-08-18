@@ -16,29 +16,30 @@ const (
 		"VALUES(?, ?, ?, ?, ?)"
 
 	GET_USER_BY_EMAIL = "SELECT " +
-		"id, email, name, mobile, icon, password, salt, registered, token " +
+		"id, email, name, mobile, icon, password, salt, registered, token, created " +
 		"from users " +
 	  "WHERE email=?"
 
 	GET_USER_BY_NAME = "SELECT " +
-		"id, email, name, icon " +
+		"id, email, name, icon, created " +
 		"from users " +
 		"WHERE name=?"
 		
 	GET_USER_BY_TOKEN = "SELECT " +
 		"users.id, users.email, users.name, users.mobile, " +
 		"users.icon, users.password, users.salt, users.registered, " + 
-		"users.token, ranks.rank " +
+		"users.token, ranks.rank, users.created " +
 		"from users, ranks " +
 		"WHERE users.token=? and users.rank_id=ranks.id"
 		
 )
 
 
-func createUser(email string, password string) (error) {
+func createUser(email string, password string,
+	name string) (error) {
 
-	hash, salt, err := gowdl.GenerateHashAndSalt(password, HMAC_KEY, PEPPER,   
-		HASH_LENGTH)
+	hash, salt, err := gowdl.GenerateHashAndSalt(password,
+		HMAC_KEY, PEPPER, HASH_LENGTH)
 
 	if err != nil {
 		
@@ -47,34 +48,25 @@ func createUser(email string, password string) (error) {
 
 	} else {
 
-		name, err := gowdl.ParseNameFromEmail(email)
+		token, err := gowdl.GenerateToken(HMAC_KEY, TOKEN_LENGTH)
 
 		if err != nil {
-			log.Printf("%s createUser(): %s", APP_NAME, err.Error())
 			return err
 		} else {
 
-			token, err := gowdl.GenerateToken(HMAC_KEY, TOKEN_LENGTH)
-
-			if err != nil {
-				return err
-			} else {
-
-				_, err := data.Exec(
-					CREATE_USER, email, salt, hash, name, token,
-				)
-		
-				if err != nil {
-		
-					log.Println(err)
-					return err
-		
-				} else {
-					return nil
-				}
-
-			}
+			_, err := data.Exec(
+				CREATE_USER, email, salt, hash, name, token,
+			)
 	
+			if err != nil {
+	
+				log.Println(err)
+				return err
+	
+			} else {
+				return nil
+			}
+
 		}
 
 	}
@@ -90,7 +82,7 @@ func getUserByName(name string) *UserInfo {
 
 	u := UserInfo{}
 
-	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Icon)
+	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Icon, &u.Created)
 
 	if err != nil || err == sql.ErrNoRows {
 		log.Println("gogetsdone getUserByName(): ", err)
@@ -110,8 +102,8 @@ func getUserByEmail(email string) *User {
 
 	u := User{}
 
-	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Mobile, &u.Icon, &u.Password,
-		&u.Salt, &u.Registered, &u.Token)
+	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Mobile, &u.Icon,
+		&u.Password, &u.Salt, &u.Registered, &u.Token, &u.Created)
 
 	if err != nil || err == sql.ErrNoRows {
 		log.Println("gogetsdone getUserByEmail(): ", err)
@@ -131,8 +123,9 @@ func getUserByToken(token string) *User {
 
 	u := User{}
 
-	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Mobile, &u.Icon, &u.Password,
-		&u.Salt, &u.Registered, &u.Token, &u.RankName)
+	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Mobile, &u.Icon,
+		&u.Password, &u.Salt, &u.Registered, &u.Token, &u.RankName,
+		&u.Created)
 
 	if err != nil || err == sql.ErrNoRows {
 		log.Println("gogetsdone getUserByToken(): ", err)
@@ -151,12 +144,13 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 		email 		:= r.FormValue("email")
 		password  := r.FormValue("password")
+		name      := r.FormValue("name")
 
-		if email == "" || password == "" {
+		if email == "" || password == "" || name == "" {
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
 
-			err := createUser(email, password)
+			err := createUser(email, password, name)
 
 			if err != nil {
 				
@@ -213,6 +207,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 				ID:				u.ID,
 				Name:  		u.Name,
 				RankName: u.RankName,
+				Created: u.Created,
 			}
 
 			j, err := json.Marshal(info)
