@@ -125,8 +125,8 @@ build_debian()
   fi
 
   cd $HOME/build
-  dpkg-deb --build mboard
-  log "Generated package mboard.deb"
+  dpkg-deb --build gogetsdone 
+  log "Generated package getsdone.deb"
 }
 
 if ! [ -d $dst ]; then
