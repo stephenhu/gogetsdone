@@ -22,15 +22,6 @@ create table if not exists users(
   FOREIGN KEY(rank_id) REFERENCES ranks(id)
 );
 
-create table if not exists follows(
-  id INTEGER NOT NULL PRIMARY KEY,
-  user_id INTEGER,
-  follow_id INTEGER,
-  created DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(user_id) REFERENCES users(id)  
-);
-
 create table if not exists states(
   id INTEGER NOT NULL PRIMARY KEY,
   state VARCHAR,

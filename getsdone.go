@@ -30,6 +30,11 @@ const (
 	ACTION_DEFERRED			= "deferred"
 )
 
+const (
+	CONTACT_ACCEPTED		= "accepted"
+	CONTACT_DECLINED    = "declined"
+)
+
 type VersionInfo struct {
 	Version 			string						`json:"version"`
 }
@@ -58,6 +63,15 @@ type UserInfo struct {
 	RankName      string            `json:"rankName"`
 	Created  			string						`json:"created"`
 	Updated			  string						`json:"updated"`
+}
+
+
+type Contact struct {
+	ID						string						`json:"id"`
+	ContactID			string						`json:"contactId"`
+	ContactName		string						`json:"contactName"`
+	ContactIcon   sql.NullString		`json:"contactIcon"`
+	State			    string						`json:"accepted"`
 }
 
 

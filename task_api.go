@@ -237,7 +237,6 @@ func createTask(uid string, task string) (error) {
 			
 				if err != nil {
 			
-					tx.Rollback()
 					log.Println(err)
 					return err
 			
@@ -251,8 +250,7 @@ func createTask(uid string, task string) (error) {
 		
 				}
 
-			}
-			
+			}	
 	
 		}
 
