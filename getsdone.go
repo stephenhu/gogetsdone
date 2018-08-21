@@ -71,7 +71,7 @@ type Contact struct {
 	ContactID			string						`json:"contactId"`
 	ContactName		string						`json:"contactName"`
 	ContactIcon   sql.NullString		`json:"contactIcon"`
-	State			    string						`json:"accepted"`
+	State			    string						`json:"state"`
 }
 
 

@@ -15,22 +15,25 @@ import (
 const (
 
 	CREATE_CONTACT	= "INSERT into contacts(" +
-		"user_id, contact_id) " +
-		"VALUES(?, ?)"
+		"user_id, contact_id, contact_state_id) " +
+		"VALUES(?, ?, (" +
+		"SELECT id from contact_states where name='pending'))"
 
 	REMOVE_CONTACT	= "DELETE from contacts " +
 		"WHERE user_id=? and contact_id=?"
 
 	ACCEPT_CONTACT  = "UPDATE contacts " +
-		"SET state=1 " +
+		"SET contact_state_id=(" +
+		"SELECT id from contact_states where name='accepted') " +
 		"WHERE user_id=? and contact_id=?"
 
 	DECLINE_CONTACT  = "UPDATE contacts " +
-		"SET state=2 " +
+		"SET contact_state_id=(" +
+		"SELECT id from contact_states where name='declined') " +
 		"WHERE user_id=? and contact_id=?"
 
 	GET_CONTACTS = "SELECT contacts.id, contacts.contact_id, " +
-	  "contacts.accepted, users.name, users.icon " +
+	  "contacts.state, users.name, users.icon " +
 	  "from contacts, users " +
 	  "WHERE contacts.user_id=? and contacts.contact_id=users.id"
 
