@@ -58,7 +58,7 @@ func initRoutes() *mux.Router {
 	router.HandleFunc("/api/users/{id:[0-9]+}/tasks/{tid:[0-9]+}/comments",
 	  commentHandler)
 	
-		router.HandleFunc("/api/users/{id:[0-9]+}/contacts", contactHandler)
+	router.HandleFunc("/api/users/{id:[0-9]+}/contacts", contactHandler)
 	router.HandleFunc("/api/users/{id:[0-9]+}/contacts/{cid:[0-9]+}",
 	  contactHandler)
 

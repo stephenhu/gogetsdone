@@ -33,9 +33,10 @@ const (
 		"WHERE user_id=? and contact_id=?"
 
 	GET_CONTACTS = "SELECT contacts.id, contacts.contact_id, " +
-	  "contacts.state, users.name, users.icon " +
-	  "from contacts, users " +
-	  "WHERE contacts.user_id=? and contacts.contact_id=users.id"
+	  "contact_states.name, users.name, users.icon " +
+	  "from contacts, contact_states, users " +
+		"WHERE contacts.user_id=? and contacts.contact_id=users.id and " +
+		"contact_states.id=contacts.contact_state_id"
 
 	GET_CONTACT_REQUESTS = "SELECT id, contact_id from contacts " +
 	  "WHERE user_id=? and contact_id=? and accepted=0"
@@ -162,40 +163,44 @@ func contactHandler(w http.ResponseWriter, r *http.Request) {
 			switch r.Method {
 			case http.MethodPost:
 	
-				if cid != "" {
-	
-					tx, err := data.Begin()
+				email := r.FormValue("email")
 
-					if err != nil {
-						w.WriteHeader(http.StatusInternalServerError)
+				tx, err := data.Begin()
+
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+				} else {
+
+					user := getUserByEmail(email)
+
+					if user == nil {
+						w.WriteHeader(http.StatusNotFound)
 					} else {
 
-						err := addContact(u.ID, cid)
+						err := addContact(u.ID, user.ID)
 
 						if err != nil {
 							
 							tx.Rollback()
 							w.WriteHeader(http.StatusInternalServerError)
-
+	
 						} else {
-
-							err := addContact(cid, u.ID)
-
+	
+							err := addContact(user.ID, u.ID)
+	
 							if err != nil {
-
+	
 								tx.Rollback()
 								w.WriteHeader(http.StatusInternalServerError)
-
+	
 							} else {
 								tx.Commit()
 							}
-
+	
 						}
-						
-					}
 
-				} else {
-					w.WriteHeader(http.StatusBadRequest)
+					}
+					
 				}
 	
 			case http.MethodGet:
