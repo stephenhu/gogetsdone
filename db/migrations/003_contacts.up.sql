@@ -20,5 +20,6 @@ create table if not exists contacts(
 );
 
 INSERT into contact_states(name) VALUES("pending");
+INSERT into contact_states(name) VALUES("requested");
 INSERT into contact_states(name) VALUES("accepted");
 INSERT into contact_states(name) VALUES("declined");

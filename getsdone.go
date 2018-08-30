@@ -33,6 +33,8 @@ const (
 const (
 	CONTACT_ACCEPTED		= "accepted"
 	CONTACT_DECLINED    = "declined"
+	CONTACT_PENDING     = "pending"
+	CONTACT_REQUESTED   = "requested"
 )
 
 type VersionInfo struct {
@@ -69,6 +71,7 @@ type UserInfo struct {
 type Contact struct {
 	ID						string						`json:"id"`
 	ContactID			string						`json:"contactId"`
+	UserID				string            `json:"userId"`
 	ContactName		string						`json:"contactName"`
 	ContactIcon   sql.NullString		`json:"contactIcon"`
 	State			    string						`json:"state"`

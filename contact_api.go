@@ -17,7 +17,7 @@ const (
 	CREATE_CONTACT	= "INSERT into contacts(" +
 		"user_id, contact_id, contact_state_id) " +
 		"VALUES(?, ?, (" +
-		"SELECT id from contact_states where name='pending'))"
+		"SELECT id from contact_states where name=?))"
 
 	REMOVE_CONTACT	= "DELETE from contacts " +
 		"WHERE user_id=? and contact_id=?"
@@ -38,10 +38,53 @@ const (
 		"WHERE contacts.user_id=? and contacts.contact_id=users.id and " +
 		"contact_states.id=contacts.contact_state_id"
 
-	GET_CONTACT_REQUESTS = "SELECT id, contact_id from contacts " +
-	  "WHERE user_id=? and contact_id=? and accepted=0"
+	GET_CONTACT_REQUESTS = "SELECT contacts.id, contacts.contact_id, " +
+		"contacts.user_id, contact_states.name, users.name, users.icon " +
+		"from contacts, contact_states, users " +
+		"WHERE contacts.contact_id=? and contacts.user_id=users.id and " +
+		"contact_states.id=contacts.contact_state_id and " +
+		"contacts.contact_state_id=(SELECT id from contact_states where name='requested')"
 
 )
+
+
+func getContactRequests(uid string) []Contact {
+
+	rows, err := data.Query(
+		GET_CONTACT_REQUESTS, uid,
+	)
+
+	defer rows.Close()
+
+	contacts := []Contact{}
+
+	if err != nil || err == sql.ErrNoRows {
+		log.Printf("%s getContactRequests(): %s", APP_NAME, err.Error())
+	} else {
+
+		for rows.Next() {
+
+			c := Contact{}
+
+			err := rows.Scan(&c.ID, &c.ContactID, &c.UserID, &c.State, &c.ContactName, 
+				&c.ContactIcon)
+			
+			if err != nil {
+
+				log.Printf("%s getContactRequests(): %s", APP_NAME, err.Error())
+				return contacts
+
+			}
+			
+			contacts = append(contacts, c)
+
+		}
+
+	}
+
+	return contacts
+
+} // getContactRequests
 
 
 func getContacts(uid string) []Contact {
@@ -83,10 +126,10 @@ func getContacts(uid string) []Contact {
 } // getContacts
 
 
-func addContact(uid string, cid string) (error) {
+func addContact(uid string, cid string, state string) (error) {
 
 	_, err := data.Exec(
-		CREATE_CONTACT, uid, cid,
+		CREATE_CONTACT, uid, cid, state,
 	)
 
 	if err != nil {
@@ -165,42 +208,48 @@ func contactHandler(w http.ResponseWriter, r *http.Request) {
 	
 				email := r.FormValue("email")
 
-				tx, err := data.Begin()
+				user := getUserByEmail(email)
 
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
+				if user == nil {
+					w.WriteHeader(http.StatusNotFound)
 				} else {
 
-					user := getUserByEmail(email)
-
-					if user == nil {
-						w.WriteHeader(http.StatusNotFound)
+					if user.ID == u.ID {
+						w.WriteHeader(http.StatusBadRequest)
 					} else {
 
-						err := addContact(u.ID, user.ID)
+						tx, err := data.Begin()
 
 						if err != nil {
-							
-							tx.Rollback()
 							w.WriteHeader(http.StatusInternalServerError)
-	
 						} else {
-	
-							err := addContact(user.ID, u.ID)
-	
+							
+							err := addContact(u.ID, user.ID, CONTACT_REQUESTED)
+
 							if err != nil {
-	
+								
 								tx.Rollback()
 								w.WriteHeader(http.StatusInternalServerError)
-	
+		
 							} else {
-								tx.Commit()
+		
+								err := addContact(user.ID, u.ID, CONTACT_PENDING)
+		
+								if err != nil {
+		
+									tx.Rollback()
+									w.WriteHeader(http.StatusInternalServerError)
+		
+								} else {
+									tx.Commit()
+								}
+		
 							}
-	
-						}
 
+						}
+		
 					}
-					
+	
 				}
 	
 			case http.MethodGet:
