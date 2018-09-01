@@ -32,6 +32,11 @@ const (
 		"SELECT id from contact_states where name='declined') " +
 		"WHERE user_id=? and contact_id=?"
 
+	UPDATE_CONTACT  = "UPDATE contacts " +
+		"SET contact_state_id=(" +
+		"SELECT id from contact_states where name=?) " +
+		"WHERE user_id=? and contact_id=?"
+
 	GET_CONTACTS = "SELECT contacts.id, contacts.contact_id, " +
 	  "contact_states.name, users.name, users.icon " +
 	  "from contacts, contact_states, users " +
@@ -45,7 +50,90 @@ const (
 		"contact_states.id=contacts.contact_state_id and " +
 		"contacts.contact_state_id=(SELECT id from contact_states where name='requested')"
 
+	CHECK_CONTACT_EXISTS = "SELECT contacts.id, contact_states.name " +
+		"from contacts, contact_states where contacts.user_id=? and " + "contacts.contact_id=? and contact_states.id=contacts.contact_state_id"
+
 )
+
+
+func removeDeclinedContacts(id string, cid string) bool {
+
+	tx, err := data.Begin()
+
+	if err != nil {
+		
+		log.Println("gogetsdone removeDeclinedContacts(): ", err)
+		return false
+
+	} else {
+
+		err := removeContact(id, cid)
+
+		if err != nil {
+			
+			log.Println("gogetsdone removeDeclinedContacts(): ", err)
+			return false
+	
+		} else {
+	
+			err := removeContact(cid, id)
+	
+			if err != nil {
+				
+				tx.Rollback()
+				log.Println("gogetsdone removeDeclinedContacts(): ", err)
+				return false
+	
+			} else {
+	
+				tx.Commit()
+				return true
+	
+			}
+	
+		}
+	
+	}
+
+} // removeDeclinedContacts
+
+
+func contactExists(id string, cid string) bool {
+
+	if id == "" || cid == "" {
+		return false
+	} else {
+
+		row := data.QueryRow(
+			CHECK_CONTACT_EXISTS, id, cid,
+		)
+
+		c := Contact{}
+
+		err := row.Scan(&c.ID, &c.State)
+
+		if err != nil || err == sql.ErrNoRows {
+			log.Println("gogetsdone contactExists(): ", err)
+			return false
+		} else {
+
+			if c.State == CONTACT_DECLINED {
+
+				if removeDeclinedContacts(id, cid) {
+					return false
+				} else {
+					return true
+				}
+
+			} else {				
+				return true
+			}
+
+		}
+
+	}
+
+} // contactExists
 
 
 func getContactRequests(uid string) []Contact {
@@ -128,17 +216,23 @@ func getContacts(uid string) []Contact {
 
 func addContact(uid string, cid string, state string) (error) {
 
-	_, err := data.Exec(
-		CREATE_CONTACT, uid, cid, state,
-	)
-
-	if err != nil {
-
-		log.Printf("%s addContact(): %s", APP_NAME, err.Error())
-		return err
-
+	if contactExists(uid, cid) {
+		return errors.New("Contact already exists or has been requestsed")
 	} else {
-		return nil
+
+		_, err := data.Exec(
+			CREATE_CONTACT, uid, cid, state,
+		)
+
+		if err != nil {
+
+			log.Printf("%s addContact(): %s", APP_NAME, err.Error())
+			return err
+
+		} else {
+			return nil
+		}
+
 	}
 
 } // addContact
@@ -162,18 +256,15 @@ func removeContact(uid string, cid string) (error) {
 
 func updateContact(uid string, cid string, action string) (error) {
 
-	var statement string
+	if action != CONTACT_ACCEPTED && action != CONTACT_DECLINED &&
+		action != CONTACT_PENDING && action != CONTACT_REQUESTED {
 
-	if action == CONTACT_ACCEPTED {
-		statement = ACCEPT_CONTACT
-	} else if action == CONTACT_DECLINED {
-		statement = DECLINE_CONTACT
-	} else {
-		return errors.New("Non-registered contact event") 
+		return errors.New("Non-registered contact action")
+
 	}
 
 	_, err := data.Exec(
-		statement, uid, cid,
+		UPDATE_CONTACT, action, uid, cid,
 	)
 
 	if err != nil {
@@ -228,6 +319,7 @@ func contactHandler(w http.ResponseWriter, r *http.Request) {
 
 							if err != nil {
 								
+								log.Printf("%s contactHandler(): %s", APP_NAME, err.Error())
 								tx.Rollback()
 								w.WriteHeader(http.StatusInternalServerError)
 		
@@ -272,7 +364,6 @@ func contactHandler(w http.ResponseWriter, r *http.Request) {
 				if cid == "" {
 					w.WriteHeader(http.StatusBadRequest)
 				} else {
-
 
 					action := r.FormValue("action")
 

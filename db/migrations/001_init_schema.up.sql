@@ -87,14 +87,14 @@ create table if not exists comments(
   FOREIGN KEY(user_id) REFERENCES users(id)  
 );
 
-INSERT into ranks(rank, count) VALUES("white", 0);
-INSERT into ranks(rank, count) VALUES("yellow", 10);
-INSERT into ranks(rank, count) VALUES("orange", 20);
-INSERT into ranks(rank, count) VALUES("green", 50);
-INSERT into ranks(rank, count) VALUES("blue", 100);
-INSERT into ranks(rank, count) VALUES("brown", 200);
-INSERT into ranks(rank, count) VALUES("black", 500);
-INSERT into ranks(rank, count) VALUES("red", 1000);
+INSERT into ranks(rank, count) VALUES("trainee", 0);
+INSERT into ranks(rank, count) VALUES("neophyte", 10);
+INSERT into ranks(rank, count) VALUES("novice", 20);
+INSERT into ranks(rank, count) VALUES("trained", 50);
+INSERT into ranks(rank, count) VALUES("qualified", 100);
+INSERT into ranks(rank, count) VALUES("experienced", 200);
+INSERT into ranks(rank, count) VALUES("professional", 500);
+INSERT into ranks(rank, count) VALUES("maestro", 1000);
 
 INSERT into states(state) VALUES("open");
 INSERT into states(state) VALUES("deferred");
