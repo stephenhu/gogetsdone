@@ -148,8 +148,10 @@ func authenticate(email string, password string) *User {
 				PEPPER, HASH_LENGTH)
 
 			if err != nil {
+
 				log.Printf("%s authenticate(): %s", APP_NAME, err)
 				return nil
+
 			} else {
 
 				if hash == u.Password {
@@ -160,7 +162,6 @@ func authenticate(email string, password string) *User {
 	
 			}
 				
-
 		}
 
 	}
@@ -237,8 +238,10 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 			token, err := updateToken(u)
 
 			if err != nil {
+
 				log.Printf("%s authHandler(): %s", APP_NAME, err.Error())
 				w.WriteHeader(http.StatusInternalServerError)
+
 			} else {
 
 				encryptedData, err := encryptCookieData(u.ID, token, u.Icon.String)
@@ -286,8 +289,10 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 			err := deleteToken(u)
 
 			if err != nil {
+
 				log.Println(err)
 				w.WriteHeader(http.StatusInternalServerError)
+				
 			}
 
 		}

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 
@@ -54,6 +55,36 @@ const (
 		"from contacts, contact_states where contacts.user_id=? and " + "contacts.contact_id=? and contact_states.id=contacts.contact_state_id"
 
 )
+
+
+func checkContacts(id string, mentions []string) bool {
+
+	contacts := getContacts(id)
+
+	for _, m := range mentions {
+
+		isFound := false
+
+		for _, c := range contacts {
+
+			log.Println(c.ContactName)
+			log.Println(m)
+
+			if c.ContactName == strings.ToLower(m) {
+				isFound = true
+			}
+
+		}
+
+		if !isFound {
+			return false
+		}
+
+	}
+
+	return true
+
+} // checkContacts
 
 
 func removeDeclinedContacts(id string, cid string) bool {

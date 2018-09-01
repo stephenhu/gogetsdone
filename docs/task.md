@@ -30,3 +30,13 @@ retask, this is a cloning action.
 ## embedded urls
 
 need some shortener service
+
+## delegate task
+
+* user must be in your contact list and accepted before you can delegate tasks
+to this person
+* if user is not in your contact list then the request is rejected
+* multiple users can be delegates, this constitutes a clone of the task
+* there are several timing issues to be considered:
+* the first is if multiple delegates are listed, and not all are in the contacts.
+* the other issue is when a contact exists during delegation, but before the task is completed, the delegate is removed.  what happens in these cases.

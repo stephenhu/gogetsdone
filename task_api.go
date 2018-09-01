@@ -17,8 +17,8 @@ import (
 const (
 
 	CREATE_TASK = "INSERT into tasks(" +
-		"owner_id, task) " +
-		"VALUES(?, ?)"
+		"owner_id, delegate_id, task) " +
+		"VALUES(?, ?, ?)"
 	
 	CLONE_TASK = "INSERT into tasks(" +
 		"owner_id, delegate_id, origin_id, task) " +
@@ -101,23 +101,30 @@ func addHashtags(id string, task string) {
 } // addHashtags
 
 
-func addDelegates(id string, oid string, task string) {
+func createTasksForDelegates(id string, mentions []string,
+	task string) (error) {
 
-	mentions := gowdl.ExtractMentions(task)
-	
-	for _, mention := range mentions {
+	for _, m := range mentions {
 
-		u := getUserByName(strings.TrimSpace(mention))
+		u := getUserByName(strings.ToLower(m))
 
 		if u == nil {
-			log.Printf("%s addDelegates(): delegate user not found", APP_NAME)
+			return errors.New("Delegate user not found.")
 		} else {
-			cloneTask(id, u.ID, oid, task)
+			
+			err := createTask(id, &u.ID, task)
+
+			if err != nil {
+				return err
+			}
+
 		}
 
 	}
 
-} // addDelegates
+	return nil
+
+} // createTasksForDelegates
 
 
 func cloneTask(id string, delegate_id string, origin_id string,
@@ -209,53 +216,44 @@ func addHashtagToTask(tid string, hid string) (error) {
 } // addHashtagToTask
 
 
-func createTask(uid string, task string) (error) {
+func createTask(uid string, did *string, task string) (error) {
 
-	tx, err := data.Begin()
+	shortenedTask, err := shortenURLs(task)
 
 	if err != nil {
-		log.Printf("%s createTask(): %s", APP_NAME, err.Error())
+		log.Println(err)
 		return err
 	} else {
 
-		shortenedTask, err := shortenURLs(task)
+		tx, err := data.Begin()
 
 		if err != nil {
-			log.Println(err)
+			log.Printf("%s createTask(): %s", APP_NAME, err.Error())
 			return err
 		} else {
-
-			mentions := gowdl.ExtractMentions(task)
-
-			if len(mentions) > 0 {
-				return nil
+			
+			_, err := data.Exec(
+				CREATE_TASK, uid, *did, shortenedTask,
+			)
+		
+			if err != nil {
+		
+				log.Println(err)
+				return err
+		
 			} else {
-
-				_, err := data.Exec(
-					CREATE_TASK, uid, shortenedTask,
-				)
-			
-				if err != nil {
-			
-					log.Println(err)
-					return err
-			
-				} else {
-		
-					addHashtags(uid, task)
-		
-					tx.Commit()
-		
-					return nil
-		
-				}
-
-			}	
 	
+				addHashtags(uid, task)
+	
+				tx.Commit()
+	
+				return nil
+	
+			}
+
 		}
 
 	}
-
 
 } // createTask
 
@@ -458,11 +456,32 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusBadRequest)
 			} else {
 
-				err := createTask(u.ID, task)
+				mentions := gowdl.ExtractMentions(task)
 
-				if err != nil {
-					log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
-					w.WriteHeader(http.StatusConflict)
+				if len(mentions) > 0 {
+
+					if checkContacts(u.ID, mentions) {
+						createTasksForDelegates(u.ID, mentions, task)
+					} else {
+						
+						log.Printf(
+							"gogetsdone taskHandler(): One or more delegates are not " +
+							"listed in your contacts.")
+						w.WriteHeader(http.StatusConflict)
+						
+					}
+
+				} else {
+
+					err := createTask(u.ID, nil, task)
+
+					if err != nil {
+						
+						log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
+						w.WriteHeader(http.StatusInternalServerError)
+
+					}
+	
 				}
 
 			}
