@@ -72,8 +72,8 @@ const (
 		"SET actual=CURRENT_TIMESTAMP " +
 		"WHERE id=?"
 
-	DEFER_TASK = "UPDATE tasks " +
-		"SET deferred=1 " +
+	UPDATE_TASK = "UPDATE tasks " +
+		"SET deferred=? " +
 		"WHERE id=?"
 
 )
@@ -378,10 +378,14 @@ func completeTask(tid string) bool {
 } // completeTask
 
 
-func deferTask(tid string) bool {
+func updateTask(tid string, state int) bool {
+
+	if state != UPDATE_TASK_DEFERRED && state != UPDATE_TASK_UNDEFERRED {
+		return false
+	}
 
 	_, err := data.Exec(
-		DEFER_TASK, tid,
+		UPDATE_TASK, state, tid,
 	)
 
 	if err != nil {
@@ -391,7 +395,7 @@ func deferTask(tid string) bool {
 		return true
 	}
 
-} // deferTask
+} // updateTask
 
 
 func taskHandler(w http.ResponseWriter, r *http.Request) {
@@ -517,7 +521,7 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 			if u.ID == id {
 
 				action := r.FormValue("action")
-		
+
 				if action == ACTION_COMPLETED {
 
 					if !completeTask(tid) {
@@ -526,10 +530,18 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 	
 				} else if action == ACTION_DEFERRED {
 
-					if !deferTask(tid) {
+					if !updateTask(tid, UPDATE_TASK_DEFERRED) {
 						w.WriteHeader(http.StatusInternalServerError)
 					}
 
+				} else if action == ACTION_UNDEFERRED {
+
+					if !updateTask(tid, UPDATE_TASK_UNDEFERRED) {
+						w.WriteHeader(http.StatusInternalServerError)
+					}
+
+				} else {
+					w.WriteHeader(http.StatusBadRequest)
 				}
 
 			} else {

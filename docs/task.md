@@ -1,8 +1,10 @@
 # task
 
-tasks will not be limited to 140, but should have some limit close to 140,
+tasks will be limited to 1024, but should have some limit close to 140,
 the reasoning is we want tasks to be short, if they're too long, the implication
-is to break them down into multiple tasks.
+is to break them down into multiple tasks.  the 1024 is chosen because the
+various things like mentions and hashtags will take up additional space, but
+the actual task details should be relatively short.
 
 ## usernames
 

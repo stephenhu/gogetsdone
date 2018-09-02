@@ -28,6 +28,7 @@ const (
 const (
 	ACTION_COMPLETED		= "completed"
 	ACTION_DEFERRED			= "deferred"
+	ACTION_UNDEFERRED   = "undeferred"
 )
 
 const (
@@ -35,6 +36,11 @@ const (
 	CONTACT_DECLINED    = "declined"
 	CONTACT_PENDING     = "pending"
 	CONTACT_REQUESTED   = "requested"
+)
+
+const (
+	UPDATE_TASK_DEFERRED			= 1
+	UPDATE_TASK_UNDEFERRED		= 0
 )
 
 type VersionInfo struct {
