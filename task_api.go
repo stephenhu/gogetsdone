@@ -42,6 +42,12 @@ const (
 		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and (tasks.owner_id=users.id) " +
 		"and tasks.actual IS NULL and tasks.deferred=0"
 
+	GET_ASSIGNED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, tasks.delegate_id, " +
+		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, users.name " +
+		"FROM tasks, users " +
+		"WHERE tasks.owner_id=? and tasks.delegate_id=users.id " +
+		"and tasks.actual IS NULL and tasks.deferred=0"
+
 	GET_COMPLETED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, " +
 		"tasks.delegate_id, tasks.origin_id, tasks.task, tasks.actual, " +
 		"tasks.created, users.name " +
@@ -233,7 +239,7 @@ func createTask(uid string, did *string, task string) (error) {
 		} else {
 			
 			_, err := data.Exec(
-				CREATE_TASK, uid, *did, shortenedTask,
+				CREATE_TASK, uid, did, shortenedTask,
 			)
 		
 			if err != nil {
@@ -277,6 +283,12 @@ func getTasksByUser(id string, view string) []Task {
 			GET_DEFERRED_TASKS_BY_USER, id, id,
 		)
 
+	} else if view == TASK_ASSIGNED {
+
+		rows, err = data.Query(
+			GET_ASSIGNED_TASKS_BY_USER, id,
+		)
+
 	} else {
 		
 		rows, err = data.Query(
@@ -289,7 +301,7 @@ func getTasksByUser(id string, view string) []Task {
 
 	if err != nil || err == sql.ErrNoRows {
 		
-		log.Printf("%s getOpenTasksByUser(): %s", APP_NAME, err.Error())
+		log.Printf("%s getTasksByUser(): %s", APP_NAME, err.Error())
 		return tasks
 
 	} else {
@@ -300,21 +312,20 @@ func getTasksByUser(id string, view string) []Task {
 
 			err := rows.Scan(&t.ID, &t.OwnerID, &t.DelegateID, &t.OriginID,
 				&t.Task, &t.Actual, &t.Created, &t.OwnerName)
-				
+			
 			if err != nil || err == sql.ErrNoRows {
 
-				log.Printf("%s getOpenTasksByUser(): %s", APP_NAME, err.Error())
+				log.Printf("%s getTasksByUser(): %s", APP_NAME, err.Error())
 				return tasks
 
 			} else {
 
 				comments := getCommentsByTask(t.ID)
 
-				log.Println(comments)
-
 				t.Comments = comments
 
 				tasks = append(tasks, t)
+
 			}
 
 		}
@@ -394,49 +405,51 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
 
-			// TODO: authorization?
-
 			vars := mux.Vars(r)
 
 			id	:= vars["id"]
 			tid	:= vars["tid"]
-
-      log.Println(id)
 			
-			if tid == "" {
+			if id == u.ID {
 
-				view := r.FormValue("view")
+				if tid == "" {
 
-				var tasks []Task
-	
-				tasks = getTasksByUser(u.ID, view)	
-	
-				j, err := json.Marshal(tasks)
-	
-				if err != nil {
-					
-					log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
-					w.WriteHeader(http.StatusInternalServerError)
-	
+					view := r.FormValue("view")
+
+					var tasks []Task
+		
+					tasks = getTasksByUser(u.ID, view)	
+		
+					j, err := json.Marshal(tasks)
+		
+					if err != nil {
+						
+						log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
+						w.WriteHeader(http.StatusInternalServerError)
+		
+					} else {
+						w.Write(j)
+					}
+
 				} else {
-					w.Write(j)
+
+					task := getTask(tid)
+
+					j, err := json.Marshal(task)
+
+					if err != nil {
+
+						log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
+						w.WriteHeader(http.StatusInternalServerError)
+
+					} else {
+						w.Write(j)
+					}
+
 				}
 
 			} else {
-
-				task := getTask(tid)
-
-				j, err := json.Marshal(task)
-
-				if err != nil {
-
-					log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
-					w.WriteHeader(http.StatusInternalServerError)
-
-				} else {
-					w.Write(j)
-				}
-
+				w.WriteHeader(http.StatusUnauthorized)
 			}
 
 
@@ -465,8 +478,8 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 					} else {
 						
 						log.Printf(
-							"gogetsdone taskHandler(): One or more delegates are not " +
-							"listed in your contacts.")
+							"%s taskHandler(): One or more delegates are not " +
+							"listed in your contacts or you have delegated to yourself which should not be allowed.", APP_NAME)
 						w.WriteHeader(http.StatusConflict)
 						
 					}

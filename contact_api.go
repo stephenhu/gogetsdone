@@ -67,9 +67,10 @@ func checkContacts(id string, mentions []string) bool {
 
 		for _, c := range contacts {
 
-			log.Println(c.ContactName)
-			log.Println(m)
-
+			if c.ContactID == id {
+				return false
+			}
+			
 			if c.ContactName == strings.ToLower(m) {
 				isFound = true
 			}
