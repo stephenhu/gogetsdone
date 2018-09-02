@@ -90,8 +90,6 @@ func commentHandler(w http.ResponseWriter, r *http.Request) {
 	id 		:= vars["id"]
 	tid 	:= vars["tid"]
 
-	log.Println(id)
-
   switch r.Method {
 	case http.MethodPost:
 
@@ -101,25 +99,27 @@ func commentHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
 
-			comment := r.FormValue("comment")
+			if u.ID == id {
 
-			log.Println(comment)
-			
-			if comment == "" {
+				comment := r.FormValue("comment")
 
-				log.Printf("%s Post Comment commentHandler(): %s", APP_NAME, "Comment cannot be empty string")
-				w.WriteHeader(http.StatusBadRequest)
-
-			} else {
-
-				// TODO: user authorization
-
-				err := addComment(u.ID, tid, comment)
-
-				if err != nil {
+				if comment == "" {
+	
+					log.Printf("%s Post Comment commentHandler(): %s", APP_NAME, "Comment cannot be empty string")
 					w.WriteHeader(http.StatusBadRequest)
+	
+				} else {
+		
+					err := addComment(u.ID, tid, comment)
+	
+					if err != nil {
+						w.WriteHeader(http.StatusBadRequest)
+					}
+	
 				}
-
+	
+			} else {
+				w.WriteHeader(http.StatusUnauthorized)
 			}
 
 		}

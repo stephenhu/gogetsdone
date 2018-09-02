@@ -230,32 +230,21 @@ func createTask(uid string, did *string, task string) (error) {
 		log.Println(err)
 		return err
 	} else {
-
-		tx, err := data.Begin()
+			
+		_, err := data.Exec(
+			CREATE_TASK, uid, did, shortenedTask,
+		)
 
 		if err != nil {
-			log.Printf("%s createTask(): %s", APP_NAME, err.Error())
+
+			log.Println(err)
 			return err
+
 		} else {
-			
-			_, err := data.Exec(
-				CREATE_TASK, uid, did, shortenedTask,
-			)
-		
-			if err != nil {
-		
-				log.Println(err)
-				return err
-		
-			} else {
-	
-				addHashtags(uid, task)
-	
-				tx.Commit()
-	
-				return nil
-	
-			}
+
+			addHashtags(uid, task)
+
+			return nil
 
 		}
 
@@ -478,7 +467,29 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 				if len(mentions) > 0 {
 
 					if checkContacts(u.ID, mentions) {
-						createTasksForDelegates(u.ID, mentions, task)
+
+						tx, err := data.Begin()
+
+						if err != nil {
+
+							log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
+							w.WriteHeader(http.StatusInternalServerError)
+
+						} else {
+
+							err := createTasksForDelegates(u.ID, mentions, task)
+
+							if err != nil {
+
+								tx.Rollback()
+								w.WriteHeader(http.StatusInternalServerError)
+
+							} else {
+								tx.Commit()
+							}
+
+						}
+
 					} else {
 						
 						log.Printf(
@@ -490,12 +501,26 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 
 				} else {
 
-					err := createTask(u.ID, nil, task)
+					tx, err := data.Begin()
 
 					if err != nil {
-						
+
 						log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
 						w.WriteHeader(http.StatusInternalServerError)
+
+					} else {
+						
+						err := createTask(u.ID, nil, task)
+
+						if err != nil {
+							
+							tx.Rollback()
+							log.Printf("%s taskHandler(): %s", APP_NAME, err.Error())
+							w.WriteHeader(http.StatusInternalServerError)
+
+						} else {
+							tx.Commit()
+						}
 
 					}
 	
