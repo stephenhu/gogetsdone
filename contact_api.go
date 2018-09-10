@@ -70,7 +70,7 @@ func checkContacts(id string, mentions []string) bool {
 			if c.ContactID == id {
 				return false
 			}
-			
+
 			if c.ContactName == strings.ToLower(m) {
 				isFound = true
 			}

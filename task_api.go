@@ -112,8 +112,10 @@ func createTasksForDelegates(id string, mentions []string,
 
 	for _, m := range mentions {
 
+		log.Println(m)
 		u := getUserByName(strings.ToLower(m))
-
+		log.Println(u)
+		
 		if u == nil {
 			return errors.New("Delegate user not found.")
 		} else {
@@ -481,6 +483,7 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 
 							if err != nil {
 
+								logf(err.Error(), "taskHandler")
 								tx.Rollback()
 								w.WriteHeader(http.StatusInternalServerError)
 

@@ -18,9 +18,16 @@ var domain      = flag.String("domain", LOCAL_HOST, "domain address")
 
 var data *sql.DB = nil
 
+
+func logf(msg string, fname string) {
+	log.Printf("%s %s(): %s", version(), fname, msg)
+} // logf
+
+
 func version() string {
   return fmt.Sprintf("%s v%s", APP_NAME, VERSION)
 } // version
+
 
 func connectDatabase() {
 	
