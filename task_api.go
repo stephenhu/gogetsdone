@@ -53,8 +53,7 @@ const (
 		"tasks.created, users.name " +
 		"FROM tasks, users " +
 		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and (tasks.owner_id=users.id) " +
-		"and tasks.actual IS NOT NULL " +
-		"ORDER BY tasks.created DESC"
+		"and tasks.actual IS NOT NULL "
 
 	GET_DEFERRED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, " +
 		"tasks.delegate_id, tasks.origin_id, tasks.task, tasks.actual, " +
