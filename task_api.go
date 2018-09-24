@@ -61,6 +61,12 @@ const (
 		"FROM tasks, users " +
 		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and tasks.deferred=1 and (tasks.owner_id=users.id) " +
 		"and tasks.actual IS NULL"
+	
+	GET_ALL_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, " +
+		"tasks.delegate_id, tasks.origin_id, tasks.task, tasks.actual, " +
+		"tasks.created, users.name " +
+		"FROM tasks, users " +
+		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and (tasks.owner_id=users.id) "
 
 	GET_TASK = "SELECT tasks.id, tasks.owner_id, tasks.delegate_id, " +
 		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, users.name " +
@@ -277,6 +283,12 @@ func getTasksByUser(id string, view string) []Task {
 
 		rows, err = data.Query(
 			GET_ASSIGNED_TASKS_BY_USER, id,
+		)
+
+	} else if view == TASK_ALL {
+
+		rows, err = data.Query(
+			GET_ALL_TASKS_BY_USER, id, id,
 		)
 
 	} else {

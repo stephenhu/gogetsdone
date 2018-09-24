@@ -23,6 +23,7 @@ const (
 	TASK_COMPLETED	= "completed"
 	TASK_ASSIGNED  	= "assigned"
 	TASK_DEFERRED   = "deferred"
+	TASK_ALL        = "all"
 )
 
 const (
