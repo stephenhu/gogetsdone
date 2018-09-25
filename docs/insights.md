@@ -8,3 +8,6 @@ client side.
 * range information
   * open vs closed in the last 7 days
 
+
+given all the dates, we need to track per last 7 days, so we first need last
+7 days start timestamp, then compare to 
