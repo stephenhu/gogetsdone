@@ -71,6 +71,8 @@ func initRoutes() *mux.Router {
 
 	router.HandleFunc("/api/users/{id:[0-9]+}/notifications", notificationHandler)
 
+	router.HandleFunc("/api/ranks", rankHandler)
+
 	return router
 
 } // initRoutes

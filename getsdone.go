@@ -48,6 +48,12 @@ type VersionInfo struct {
 	Version 			string						`json:"version"`
 }
 
+type Rank struct {
+	ID						string						`json:"id"`
+	Name          string            `json:"name"`
+	Count         int               `json:"count"`
+}
+
 type User struct {
 	ID						string						`json:"id"`
 	Email					string						`json:"email"`
@@ -104,6 +110,7 @@ type Task struct {
 	StateID       sql.NullString    `json:"stateId"`
 	PriorityID    sql.NullString    `json:"priorityId"`
 	Task          string            `json:"task"`
+	Deferred      bool            	`json:"deferred"`
 	Visibility    bool              `json:"visibility"`
 	Actual				sql.NullString		`json:"actual"`
 	Comments      []Comment         `json:"comments"`

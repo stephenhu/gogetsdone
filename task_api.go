@@ -37,34 +37,36 @@ const (
 		"WHERE hashtag=?"
 
 	GET_OPEN_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, tasks.delegate_id, " +
-		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, users.name " +
+		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, tasks.deferred, " +
+		"users.name " +
 		"FROM tasks, users " +
 		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and (tasks.owner_id=users.id) " +
 		"and tasks.actual IS NULL and tasks.deferred=0"
 
 	GET_ASSIGNED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, tasks.delegate_id, " +
-		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, users.name " +
+		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, , tasks.deferred, " +
+		"users.name " +
 		"FROM tasks, users " +
 		"WHERE tasks.owner_id=? and tasks.delegate_id=users.id " +
 		"and tasks.actual IS NULL and tasks.deferred=0"
 
 	GET_COMPLETED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, " +
 		"tasks.delegate_id, tasks.origin_id, tasks.task, tasks.actual, " +
-		"tasks.created, users.name " +
+		"tasks.created, tasks.deferred, users.name " +
 		"FROM tasks, users " +
 		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and (tasks.owner_id=users.id) " +
 		"and tasks.actual IS NOT NULL "
 
 	GET_DEFERRED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, " +
 		"tasks.delegate_id, tasks.origin_id, tasks.task, tasks.actual, " +
-		"tasks.created, users.name " +
+		"tasks.created, tasks.deferred, users.name " +
 		"FROM tasks, users " +
 		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and tasks.deferred=1 and (tasks.owner_id=users.id) " +
 		"and tasks.actual IS NULL"
 	
 	GET_ALL_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, " +
 		"tasks.delegate_id, tasks.origin_id, tasks.task, tasks.actual, " +
-		"tasks.created, users.name " +
+		"tasks.created, tasks.deferred, users.name " +
 		"FROM tasks, users " +
 		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and (tasks.owner_id=users.id) "
 
@@ -313,7 +315,7 @@ func getTasksByUser(id string, view string) []Task {
 			t := Task{}
 
 			err := rows.Scan(&t.ID, &t.OwnerID, &t.DelegateID, &t.OriginID,
-				&t.Task, &t.Actual, &t.Created, &t.OwnerName)
+				&t.Task, &t.Actual, &t.Created, &t.Deferred, &t.OwnerName)
 			
 			if err != nil || err == sql.ErrNoRows {
 
