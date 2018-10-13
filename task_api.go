@@ -44,7 +44,7 @@ const (
 		"and tasks.actual IS NULL and tasks.deferred=0"
 
 	GET_ASSIGNED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, tasks.delegate_id, " +
-		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, , tasks.deferred, " +
+		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, tasks.deferred, " +
 		"users.name " +
 		"FROM tasks, users " +
 		"WHERE tasks.owner_id=? and tasks.delegate_id=users.id " +
