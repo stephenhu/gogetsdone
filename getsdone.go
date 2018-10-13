@@ -19,6 +19,10 @@ const (
 )
 
 const (
+	PASSWD_RULE_LENGTH		= 8
+)
+
+const (
 	TASK_OPEN				= "open"
 	TASK_COMPLETED	= "completed"
 	TASK_ASSIGNED  	= "assigned"

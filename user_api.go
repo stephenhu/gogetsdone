@@ -148,6 +148,8 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 		if email == "" || password == "" || name == "" {
 			w.WriteHeader(http.StatusBadRequest)
+		} else if len(password) < PASSWD_RULE_LENGTH {
+			w.WriteHeader(http.StatusBadRequest)
 		} else {
 
 			err := createUser(email, password, name)
