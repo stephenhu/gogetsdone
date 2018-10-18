@@ -12,8 +12,8 @@ import (
 const (
 
 	CREATE_USER	= "INSERT into users(" +
-		"email, salt, password, name, token) " +
-		"VALUES(?, ?, ?, ?, ?)"
+		"email, salt, password, name, token, icon) " +
+		"VALUES(?, ?, ?, ?, ?, ?)"
 
 	GET_USER_BY_EMAIL = "SELECT " +
 		"id, email, name, mobile, icon, password, salt, registered, token, created " +
@@ -36,7 +36,7 @@ const (
 
 
 func createUser(email string, password string,
-	name string) (error) {
+	name string, icon string) (error) {
 
 	hash, salt, err := gowdl.GenerateHashAndSalt(password,
 		HMAC_KEY, PEPPER, HASH_LENGTH)
@@ -55,7 +55,7 @@ func createUser(email string, password string,
 		} else {
 
 			_, err := data.Exec(
-				CREATE_USER, email, salt, hash, name, token,
+				CREATE_USER, email, salt, hash, name, token, icon,
 			)
 	
 			if err != nil {
@@ -145,6 +145,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		email 		:= r.FormValue("email")
 		password  := r.FormValue("password")
 		name      := r.FormValue("name")
+		icon      := r.FormValue("icon")
 
 		if email == "" || password == "" || name == "" {
 			w.WriteHeader(http.StatusBadRequest)
@@ -152,7 +153,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
 
-			err := createUser(email, password, name)
+			err := createUser(email, password, name, icon)
 
 			if err != nil {
 				
@@ -209,6 +210,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 				ID:				u.ID,
 				Name:  		u.Name,
 				RankName: u.RankName,
+				Icon: u.Icon,
 				Created: u.Created,
 			}
 

@@ -38,40 +38,40 @@ const (
 
 	GET_OPEN_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, tasks.delegate_id, " +
 		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, tasks.deferred, " +
-		"users.name " +
+		"users.name, users.icon " +
 		"FROM tasks, users " +
 		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and (tasks.owner_id=users.id) " +
 		"and tasks.actual IS NULL and tasks.deferred=0"
 
 	GET_ASSIGNED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, tasks.delegate_id, " +
 		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, tasks.deferred, " +
-		"users.name " +
+		"users.name, users.icon " +
 		"FROM tasks, users " +
 		"WHERE tasks.owner_id=? and tasks.delegate_id=users.id " +
 		"and tasks.actual IS NULL and tasks.deferred=0"
 
 	GET_COMPLETED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, " +
 		"tasks.delegate_id, tasks.origin_id, tasks.task, tasks.actual, " +
-		"tasks.created, tasks.deferred, users.name " +
+		"tasks.created, tasks.deferred, users.name, users.icon " +
 		"FROM tasks, users " +
 		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and (tasks.owner_id=users.id) " +
 		"and tasks.actual IS NOT NULL "
 
 	GET_DEFERRED_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, " +
 		"tasks.delegate_id, tasks.origin_id, tasks.task, tasks.actual, " +
-		"tasks.created, tasks.deferred, users.name " +
+		"tasks.created, tasks.deferred, users.name, users.icon " +
 		"FROM tasks, users " +
 		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and tasks.deferred=1 and (tasks.owner_id=users.id) " +
 		"and tasks.actual IS NULL"
 	
 	GET_ALL_TASKS_BY_USER = "SELECT tasks.id, tasks.owner_id, " +
 		"tasks.delegate_id, tasks.origin_id, tasks.task, tasks.actual, " +
-		"tasks.created, tasks.deferred, users.name " +
+		"tasks.created, tasks.deferred, users.name, users.icon " +
 		"FROM tasks, users " +
 		"WHERE (tasks.owner_id=? or tasks.delegate_id=?) and (tasks.owner_id=users.id) "
 
 	GET_TASK = "SELECT tasks.id, tasks.owner_id, tasks.delegate_id, " +
-		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, users.name " +
+		"tasks.origin_id, tasks.task, tasks.actual, tasks.created, users.name, users.icon " +
 		"FROM tasks, users " +
 		"WHERE tasks.id=? and tasks.owner_id=users.id"
 
@@ -315,7 +315,7 @@ func getTasksByUser(id string, view string) []Task {
 			t := Task{}
 
 			err := rows.Scan(&t.ID, &t.OwnerID, &t.DelegateID, &t.OriginID,
-				&t.Task, &t.Actual, &t.Created, &t.Deferred, &t.OwnerName)
+				&t.Task, &t.Actual, &t.Created, &t.Deferred, &t.OwnerName, &t.OwnerIcon)
 			
 			if err != nil || err == sql.ErrNoRows {
 
@@ -350,7 +350,7 @@ func getTask(id string) *Task {
 	t := Task{}
 
 	err := row.Scan(&t.ID, &t.OwnerID, &t.DelegateID, &t.OriginID,
-		&t.Task, &t.Actual, &t.Created, &t.OwnerName)
+		&t.Task, &t.Actual, &t.Created, &t.OwnerName, &t.OwnerIcon)
 
 	if err != nil || err == sql.ErrNoRows {
 		log.Println("gogetsdone getTask(): ", err)

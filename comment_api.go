@@ -13,7 +13,7 @@ import (
 const (
 
 	GET_COMMENTS_BY_TASK	= "SELECT comments.id, comments.comment, " +
-		"comments.created, comments.task_id, users.name " +
+		"comments.created, comments.task_id, users.name, users.icon " +
 		"FROM comments, users " +
 		"WHERE comments.task_id=? and comments.user_id=users.id " +
 		"ORDER BY comments.created DESC"
@@ -45,7 +45,8 @@ func getCommentsByTask(id string) []Comment {
 
 			c := Comment{}
 
-			err := rows.Scan(&c.ID, &c.Comment, &c.Created, &c.TaskID, &c.UserName)
+			err := rows.Scan(&c.ID, &c.Comment, &c.Created, &c.TaskID, &c.UserName,
+			  &c.UserIcon)
 				
 			if err != nil || err == sql.ErrNoRows {
 

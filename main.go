@@ -55,10 +55,14 @@ func initRoutes() *mux.Router {
 
 	router := mux.NewRouter()
 
+	router.PathPrefix("/icons").Handler(http.StripPrefix("/icons",
+		http.FileServer(http.Dir("./icons"))))
+		
 	router.HandleFunc("/auth", authHandler)
 
 	router.HandleFunc("/api/version", versionHandler)
 	router.HandleFunc("/api/users", userHandler)
+	router.HandleFunc("/api/icons", iconHandler)
 	
 	router.HandleFunc("/api/users/{id:[0-9]+}/tasks", taskHandler)
 	router.HandleFunc("/api/users/{id:[0-9]+}/tasks/{tid:[0-9]+}", taskHandler)

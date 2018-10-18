@@ -19,6 +19,10 @@ const (
 )
 
 const (
+	ICON_MAX_BYTES	= 1024 * 100
+)
+
+const (
 	PASSWD_RULE_LENGTH		= 8
 )
 
@@ -99,6 +103,7 @@ type Comment struct {
 	ID						string						`json:"id"`
 	UserID				string						`json:"userId"`
 	UserName      string            `json:"userName"`
+	UserIcon      sql.NullString     `json:"userIcon"`
 	TaskID				string						`json:"taskId"`
 	Comment       string						`json:"comment"`
 	Created  			string						`json:"created"`
@@ -109,6 +114,7 @@ type Task struct {
 	ID						string						`json:"id"`
 	OwnerID       string            `json:"ownerId"`
 	OwnerName     string            `json:"ownerName"`
+	OwnerIcon     sql.NullString    `json:"ownerIcon"`
 	DelegateID    sql.NullString    `json:"delegateId"`
 	OriginID      sql.NullString    `json:"originId"`
 	StateID       sql.NullString    `json:"stateId"`
