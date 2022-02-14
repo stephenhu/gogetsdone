@@ -10,7 +10,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/stephenhu/gowdl"
+	"github.com/stephenhu/webtools"
 )
 
 const (
@@ -144,7 +144,7 @@ func authenticate(email string, password string) *User {
 			return nil
 		} else {
 
-			hash, err := gowdl.GenerateHash(password, u.Salt, HMAC_KEY,
+			hash, err := webtools.GenerateHash(password, u.Salt, HMAC_KEY,
 				PEPPER, HASH_LENGTH)
 
 			if err != nil {
@@ -198,7 +198,7 @@ func updateToken(u *User) (string, error) {
 		  "cannot update token for nil user"))
 	} else {
 
-		token, err := gowdl.GenerateToken(HMAC_KEY, TOKEN_LENGTH)
+		token, err := webtools.GenerateToken(HMAC_KEY, TOKEN_LENGTH)
 
 		if err != nil {
 			return "", err

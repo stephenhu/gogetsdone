@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/stephenhu/gowdl"
+	"github.com/stephenhu/webtools"
 )
 
 const (
@@ -37,7 +37,7 @@ const (
 
 func createUser(email string, password string, name string) (error) {
 
-	hash, salt, err := gowdl.GenerateHashAndSalt(password,
+	hash, salt, err := webtools.GenerateHashAndSalt(password,
 		HMAC_KEY, PEPPER, HASH_LENGTH)
 
 	if err != nil {
@@ -47,7 +47,7 @@ func createUser(email string, password string, name string) (error) {
 
 	} else {
 
-		token, err := gowdl.GenerateToken(HMAC_KEY, TOKEN_LENGTH)
+		token, err := webtools.GenerateToken(HMAC_KEY, TOKEN_LENGTH)
 
 		if err != nil {
 			return err

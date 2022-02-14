@@ -1,0 +1,10 @@
+github.com/golang-migrate/migrate v3.5.4+incompatible h1:R7OzwvCJTCgwapPCiX6DyBiu2czIUMDCB118gFTKTUA=
+github.com/golang-migrate/migrate v3.5.4+incompatible/go.mod h1:IsVUlFN5puWOmXrqjgGUfIRIbU7mr8oNBE2tyERd9Wk=
+github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
+github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
+github.com/madsportslab/glbs v0.0.0-20171125141524-f17bc127e6e7 h1:7NezL0SNOZAc14x2YOk81sJNVs5YHKrPvB3tFUjUPgs=
+github.com/madsportslab/glbs v0.0.0-20171125141524-f17bc127e6e7/go.mod h1:XHNZqq/GFnHib5dJetD7mXUx7Eg3/mqER4Jh10GzO0E=
+github.com/mattn/go-sqlite3 v1.14.11 h1:gt+cp9c0XGqe9S/wAHTL3n/7MqY+siPWgWJgqdsFrzQ=
+github.com/mattn/go-sqlite3 v1.14.11/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A/KQRfk6bU=
+github.com/stephenhu/webtools v0.0.0-20220213174408-dcf6204f3f81 h1:boDX+9WKURMvnEt9SpirCd8eQqCxgILPqcHeL3VuxXQ=
+github.com/stephenhu/webtools v0.0.0-20220213174408-dcf6204f3f81/go.mod h1:k15OKgQY1YHACCmzbnDefco9fnR4zTgxDSWHAcdULR8=

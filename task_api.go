@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/stephenhu/gowdl"
+	"github.com/stephenhu/webtools"
 
 )
 
@@ -99,7 +99,7 @@ func shortenURLs(s string) (string, error) {
 
 func addHashtags(id string, task string) {
 
-	hashtags := gowdl.ExtractHashtags(task)
+	hashtags := webtools.ExtractHashtags(task)
 
 	for _, hashtag := range hashtags {
 
@@ -160,7 +160,7 @@ func cloneTask(id string, delegate_id string, origin_id string,
 			return err
 		} else {
 
-			hashtags := gowdl.ExtractHashtags(task)
+			hashtags := webtools.ExtractHashtags(task)
 
 			for _, hashtag := range hashtags {
 
@@ -477,7 +477,7 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusBadRequest)
 			} else {
 
-				mentions := gowdl.ExtractMentions(task)
+				mentions := webtools.ExtractMentions(task)
 
 				if len(mentions) > 0 {
 
